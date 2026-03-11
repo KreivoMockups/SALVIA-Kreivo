@@ -1,0 +1,787 @@
+// ==========================================
+// VARIABLES GLOBALES
+// ==========================================
+let sumaCorrectaReporte = 0;
+let sumaCorrectaLogin = 0;
+let sumaCorrectaVictima = 0; // NUEVO CAPTCHA
+let rolActual = 'tercero';
+let asistenteVozActivo = false;
+let inputActivo = null;
+let vistaActualGlobal = 'Portal Público (Inicio)';
+
+// ==========================================
+// 1. RUTEO PÚBLICO
+// ==========================================
+function navPublic(viewId) {
+    document.querySelectorAll('#public-app main > section').forEach(el => el.classList.add('hidden-view'));
+    document.getElementById(viewId).classList.remove('hidden-view');
+    const btnLogin = document.getElementById('btn-nav-login');
+    if(viewId === 'home-view') btnLogin.style.display = 'block';
+    else btnLogin.style.display = 'none';
+
+    // RASTREADOR ACTUALIZADO PARA GOOGLE FORMS
+    if(viewId === 'home-view') vistaActualGlobal = 'Portal Público (Inicio)';
+    // Si entra al reporte siendo víctima, lo marcamos como Registro, si no, como Tercero
+    else if(viewId === 'reporte-view') vistaActualGlobal = (rolActual === 'victima') ? 'Portal de Mujeres (Registro)' : 'Formulario de Reporte (Ciudadano/Tercero)';
+    else if(viewId === 'login-view' || viewId === 'intermedio-funcionario-view') vistaActualGlobal = 'Login / Acceso de Funcionarios';
+    else if(viewId === 'login-victima-view') vistaActualGlobal = 'Portal de Mujeres (Login/Trazabilidad)';
+    else if(viewId === 'trazabilidad-view') vistaActualGlobal = 'Trazabilidad de mi caso'; // Nuevo nombre exacto
+}
+
+// ==========================================
+// 2. FORMULARIO DINÁMICO (NUEVO V2.0)
+// ==========================================
+function prepararFormulario(rol) {
+    rolActual = rol;
+    const titulo = document.getElementById('form-dynamic-title');
+    const instruccion = document.getElementById('form-dynamic-instruction');
+    const btnSubmit = document.querySelector('#form-reporte button[type="submit"]');
+    const cajaCredenciales = document.getElementById('campos-credenciales'); 
+
+    if (rol === 'tercero') {
+        titulo.innerText = "Reporte por Terceros (Familiar / Conocido)";
+        instruccion.innerHTML = "<strong>Orientación:</strong> Los datos a continuación deben ser <strong>exclusivamente los de la víctima</strong> para que podamos contactarla. El campo de teléfono es el único obligatorio.";
+        btnSubmit.innerText = "Enviar Reporte a la Línea 155";
+        if(cajaCredenciales) cajaCredenciales.classList.add('hidden'); 
+    } else if (rol === 'victima') {
+        titulo.innerText = "Mi Registro Personal";
+        instruccion.innerHTML = "<strong>Orientación:</strong> Por favor complete sus datos personales y cree un usuario y contraseña para poder hacer seguimiento a su caso.";
+        btnSubmit.innerText = "Registrarme y Crear Cuenta";
+        if(cajaCredenciales) cajaCredenciales.classList.remove('hidden'); 
+    } else if (rol === 'funcionario') {
+        titulo.innerText = "Registro de Caso Entrante (Operador)";
+        instruccion.innerHTML = "<strong>Orientación Operador:</strong> Diligencie los datos proporcionados por la ciudadana en la llamada. Verifique el número de contacto.";
+        btnSubmit.innerText = "Radicar Caso en el Sistema";
+        if(cajaCredenciales) cajaCredenciales.classList.add('hidden'); 
+    }
+    
+    generarCaptchas();
+
+    // ---> ESTA ES LA LÍNEA NUEVA QUE DEBES AGREGAR <---
+    renderizarFormularioDinamico('eav-public-container'); 
+
+    navPublic('reporte-view');
+    if(asistenteVozActivo) leerTexto("Formulario abierto. " + titulo.innerText + ". " + instruccion.innerText.replace('Orientación:', 'Orientación. '));
+}
+
+// ==========================================
+// 3. MOTOR DE DATOS Y CACHÉ (LOCALSTORAGE)
+// ==========================================
+function enviarReporte(e) {
+    e.preventDefault();
+    
+    const tel = document.getElementById('reporte-tel').value;
+    // VALIDACIÓN ESTRICTA DE TELÉFONO
+    if (!tel || tel.trim() === '') {
+        alert("El número de teléfono es obligatorio para poder contactarla.");
+        if (asistenteVozActivo) leerTexto("Error. El campo de teléfono es obligatorio.");
+        return;
+    }
+
+    const captchaValor = document.getElementById('reporte-captcha').value;
+    if (captchaValor !== sumaCorrectaReporte.toString()) {
+        alert("Suma de verificación incorrecta. Intente de nuevo.");
+        generarCaptchas();
+        return;
+    }
+
+    let casosEnCache = JSON.parse(localStorage.getItem('casosSalvia')) || [];
+    const nuevoCaso = {
+        id: 'VBG-2026-' + Math.floor(1000 + Math.random() * 9000),
+        tel: tel,
+        fecha: 'Hace un momento',
+        rol: rolActual 
+    };
+    
+    casosEnCache.push(nuevoCaso);
+    localStorage.setItem('casosSalvia', JSON.stringify(casosEnCache));
+
+    inyectarFilaTabla(nuevoCaso);
+    actualizarMetricas();
+
+    alert("Registro guardado exitosamente.");
+    e.target.reset();
+    cerrarTeclado();
+    navPublic('home-view');
+}
+
+function inyectarFilaTabla(caso) {
+    const tbody = document.getElementById('tabla-seguimiento');
+    if(!tbody) return;
+    
+    const newRow = `<tr>
+        <td class="px-6 py-4 font-mono text-xs">${caso.id}</td>
+        <td class="px-6 py-4 font-medium">Ciudadana (Tel: ${caso.tel})</td>
+        <td class="px-6 py-4"><span class="px-2 py-1 rounded bg-purple-100 text-purple-700 text-xs font-bold">${caso.rol === 'funcionario' ? 'Radicado OP' : 'Primer Contacto'}</span></td>
+        <td class="px-6 py-4">${caso.fecha}</td>
+        <td class="px-6 py-4"><button class="bg-[#380E44] text-white px-3 py-1 rounded shadow hover:bg-purple-900 text-xs font-bold">INICIAR RUTA</button></td>
+    </tr>`;
+    tbody.insertAdjacentHTML('afterbegin', newRow);
+}
+
+function actualizarMetricas() {
+    let casosEnCache = JSON.parse(localStorage.getItem('casosSalvia')) || [];
+    const metricElement = document.getElementById('metric-nuevo');
+    if(metricElement) metricElement.innerText = (1240 + casosEnCache.length).toLocaleString();
+}
+
+function cargarCacheAlInicio() {
+    let casosEnCache = JSON.parse(localStorage.getItem('casosSalvia')) || [];
+    casosEnCache.forEach(caso => inyectarFilaTabla(caso));
+    actualizarMetricas();
+}
+
+// FUNCIONES REPARADAS DEL DASHBOARD
+function toggleDesignControls() {
+    const panel = document.getElementById('design-controls');
+    if (panel.classList.contains('translate-x-full')) {
+        panel.classList.remove('translate-x-full');
+    } else {
+        panel.classList.add('translate-x-full');
+    }
+}
+
+function submitFeedback() {
+    alert("Comentario de diseño registrado en la bitácora.");
+    document.getElementById('feedback-text').value = '';
+    toggleDesignControls();
+}
+
+// ==========================================
+// 4. LÓGICA DE LOGIN Y CIERRE DE SESIÓN
+// ==========================================
+function ingresarDashboard(e) {
+    e.preventDefault();
+    const captchaValor = document.getElementById('login-captcha').value;
+    if (captchaValor !== sumaCorrectaLogin.toString()) {
+        alert("Suma de seguridad incorrecta. Intente de nuevo.");
+        generarCaptchas();
+        return;
+    }
+    cerrarTeclado();
+    // V2.0: Va a la vista intermedia en lugar de ir directo al dashboard
+    navPublic('intermedio-funcionario-view');
+    e.target.reset();
+}
+
+function ingresarDashboardFinal() {
+    document.getElementById('public-app').classList.add('hidden-view');
+    document.getElementById('dashboard-app').classList.remove('hidden-view');
+    switchDashView('dashboard');
+}
+
+function cerrarSesion() {
+    document.getElementById('dashboard-app').classList.add('hidden-view');
+    document.getElementById('public-app').classList.remove('hidden-view');
+    navPublic('home-view');
+}
+
+// ==========================================
+// FLUJO PORTAL DE MUJERES
+// ==========================================
+function ingresarVictima(e) {
+    e.preventDefault();
+    const captchaValor = document.getElementById('victima-captcha').value;
+    if (captchaValor !== sumaCorrectaVictima.toString()) {
+        alert("Suma de seguridad incorrecta. Intente de nuevo.");
+        if (asistenteVozActivo) leerTexto("Error. Suma de seguridad incorrecta.");
+        generarCaptchas();
+        return;
+    }
+    cerrarTeclado();
+    navPublic('trazabilidad-view');
+    e.target.reset();
+}
+
+// ==========================================
+// 5. NAVEGACIÓN DEL DASHBOARD Y BOTONES INFO
+// ==========================================
+function switchDashView(viewId) {
+    const views = ['dashboard', 'seguimiento', 'tamizaje', 'masp', 'lgbtiq', 'builder', 'arquitectura'];
+    
+    // Ocultar todas las vistas de forma segura
+    views.forEach(v => {
+        const viewEl = document.getElementById(`view-${v}`);
+        const navEl = document.getElementById(`nav-${v}`);
+        if(viewEl) viewEl.classList.add('hidden');
+        if(navEl) navEl.classList.remove('sidebar-active');
+    });
+
+    // Mostrar la vista seleccionada de forma segura
+    const activeView = document.getElementById(`view-${viewId}`);
+    const activeNav = document.getElementById(`nav-${viewId}`);
+    if(activeView) activeView.classList.remove('hidden');
+    if(activeNav) activeNav.classList.add('sidebar-active');
+
+    // DICCIONARIO ACTUALIZADO (¡Aquí faltaba el builder!)
+    const viewConfig = {
+        'dashboard':   { title: 'Panel de Control Estratégico', storyKey: 'panel_control' },
+        'seguimiento': { title: 'Monitoreo de Rutas y Barreras', storyKey: 'seguimiento_casos' },
+        'tamizaje':    { title: 'Valoración Técnica de Riesgo de Feminicidio', storyKey: 'tamizaje_riesgo' },
+        'masp':        { title: 'Mockup Aplicativo MASP', storyKey: 'modulo_masp' },
+        'lgbtiq':      { title: 'Enfoque Diferencial de Género', storyKey: 'modulo_lgbtiq' },
+        'builder':     { title: 'Motor de Formularios (EAV)', storyKey: 'motor_formularios' }, // <--- SOLUCIÓN
+        'arquitectura':{ title: 'Arquitectura ERD', storyKey: 'arquitectura' } // <--- SOLUCIÓN
+    };
+
+    const config = viewConfig[viewId];
+    
+    // Paracaídas de seguridad: Solo cambia el título si existe la configuración
+    if (config) {
+        document.getElementById('view-title').innerHTML = `
+            ${config.title}
+            <button onclick="abrirModalHistoria('${config.storyKey}')" class="ml-4 text-gray-400 hover:text-[#FCCC3C] transition-colors align-middle" title="Ver Historia de Usuario">
+                <i class="fa-solid fa-circle-info text-2xl drop-shadow-sm"></i>
+            </button>
+        `;
+    }
+
+    // Actualizar el rastreador para el Google Form
+    if(viewId === 'dashboard') vistaActualGlobal = 'Dashboard - Panel de Control';
+    else if(viewId === 'seguimiento') vistaActualGlobal = 'Dashboard - Bandeja de Seguimiento';
+    else if(viewId === 'tamizaje') vistaActualGlobal = 'Dashboard - Tamizaje de Riesgo';
+    else if(viewId === 'masp' || viewId === 'lgbtiq') vistaActualGlobal = 'Dashboard - Módulo MASP / LGBTIQ+';
+    else if(viewId === 'builder') vistaActualGlobal = 'Dashboard - Constructor Dinámico';
+    else if(viewId === 'arquitectura') vistaActualGlobal = 'Dashboard - Arquitectura EAV'; // Nueva vista
+    
+    // Update the Mermaid initialization:
+    setTimeout(() => {
+        if (typeof mermaid !== 'undefined') {
+            // Only select mermaid blocks inside the currently visible view
+            // and ignore those that have already been processed
+            const activeMermaid = document.querySelectorAll(`#view-${viewId} .mermaid:not([data-processed="true"])`);
+            
+            if (activeMermaid.length > 0) {
+                mermaid.init(undefined, activeMermaid);
+            }
+        }
+    }, 50);
+}
+
+// ==========================================
+// 6. TECLADO VIRTUAL
+// ==========================================
+const teclado = document.getElementById('virtual-keypad');
+document.addEventListener('click', function(e) {
+    if(e.target.classList.contains('numpad-trigger')) {
+        inputActivo = e.target;
+        document.querySelectorAll('.numpad-trigger').forEach(t => t.classList.remove('ring-2', 'ring-[#380E44]'));
+        inputActivo.classList.add('ring-2', 'ring-[#380E44]');
+        teclado.classList.add('show');
+    }
+});
+document.querySelectorAll('.keypad-btn').forEach(btn => {
+    btn.addEventListener('click', function() { if(inputActivo) inputActivo.value += this.innerText; });
+});
+function borrarUltimo() { if(inputActivo) inputActivo.value = inputActivo.value.slice(0, -1); }
+function limpiarInput() { if(inputActivo) inputActivo.value = ''; }
+function cerrarTeclado() { 
+    if(teclado) teclado.classList.remove('show'); 
+    if(inputActivo) inputActivo.classList.remove('ring-2', 'ring-[#380E44]'); 
+}
+
+// ==========================================
+// 7. GENERADOR DE CAPTCHAS DINÁMICOS
+// ==========================================
+function generarCaptchas() {
+    const num1R = Math.floor(Math.random() * 10) + 1;
+    const num2R = Math.floor(Math.random() * 10) + 1;
+    sumaCorrectaReporte = num1R + num2R;
+    const textoReporte = document.getElementById('captcha-text');
+    if (textoReporte) textoReporte.innerText = `Verificación: ${num1R} + ${num2R} =`;
+    const inputReporte = document.getElementById('reporte-captcha');
+    if (inputReporte) inputReporte.value = '';
+
+    const num1L = Math.floor(Math.random() * 10) + 1;
+    const num2L = Math.floor(Math.random() * 10) + 1;
+    sumaCorrectaLogin = num1L + num2L;
+    const textoLogin = document.getElementById('login-captcha-text');
+    if (textoLogin) textoLogin.innerText = `Seguridad: ${num1L} + ${num2L} =`;
+    const inputLogin = document.getElementById('login-captcha');
+    if (inputLogin) inputLogin.value = '';
+
+    // --- 3. CAPTCHA PARA MUJERES VÍCTIMAS ---
+    const num1V = Math.floor(Math.random() * 10) + 1;
+    const num2V = Math.floor(Math.random() * 10) + 1;
+    sumaCorrectaVictima = num1V + num2V;
+    const textoVictima = document.getElementById('victima-captcha-text');
+    if (textoVictima) textoVictima.innerText = `Seguridad: ${num1V} + ${num2V} =`;
+    const inputVictima = document.getElementById('victima-captcha');
+    if (inputVictima) inputVictima.value = '';
+}
+
+// ==========================================
+// 8. ACCESIBILIDAD AVANZADA (AUDIO)
+// ==========================================
+function toggleAsistenteVoz() {
+    asistenteVozActivo = !asistenteVozActivo;
+    const btn1 = document.getElementById('btn-audio'); // Botón público
+    const btn2 = document.getElementById('btn-audio-dash'); // Botón dashboard
+    
+    if (asistenteVozActivo) {
+        if(btn1) { btn1.classList.add('bg-green-500'); btn1.classList.remove('bg-white/20'); }
+        if(btn2) { btn2.classList.add('bg-green-500', 'text-white'); btn2.classList.remove('bg-indigo-50', 'text-indigo-700'); }
+        leerTexto("Asistente de voz activado. Navegue por la página usando la tecla Tabulador.");
+    } else {
+        if(btn1) { btn1.classList.remove('bg-green-500'); btn1.classList.add('bg-white/20'); }
+        if(btn2) { btn2.classList.remove('bg-green-500', 'text-white'); btn2.classList.add('bg-indigo-50', 'text-indigo-700'); }
+        window.speechSynthesis.cancel();
+    }
+}
+
+function leerTexto(texto) {
+    if (!asistenteVozActivo) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(texto);
+    utterance.lang = 'es-CO'; 
+    utterance.rate = 1.05; // Un poco más natural
+    window.speechSynthesis.speak(utterance);
+}
+
+// Escuchador global de teclado (Tabulador)
+document.addEventListener('focusin', function(e) {
+    if (!asistenteVozActivo) return;
+    const elemento = e.target;
+    
+    // 1. SI ES UN CAMPO DE FORMULARIO
+    if (['INPUT', 'SELECT', 'TEXTAREA'].includes(elemento.tagName)) {
+        let textoALeer = "";
+        
+        // --- LÓGICA MEJORADA PARA LEER TAMIZAJES (RADIO BUTTONS + PREGUNTA) ---
+        if (elemento.type === 'radio') {
+            const labelPadre = elemento.closest('label');
+            
+            // Buscamos el div contenedor de la pregunta (que tiene la clase p-4)
+            const contenedorPregunta = elemento.closest('.p-4'); 
+            let textoPregunta = "";
+
+            if (contenedorPregunta) {
+                // Extraemos todos los textos de los párrafos (<p>) dentro de ese cuadro
+                const parrafos = contenedorPregunta.querySelectorAll('p');
+                parrafos.forEach(p => {
+                    textoPregunta += p.innerText + ". ";
+                });
+            }
+
+            if (labelPadre) {
+                textoALeer = textoPregunta + " Opción actual: " + labelPadre.innerText.trim() + ". Presione la barra espaciadora para seleccionar.";
+            }
+        } 
+        // --- FIN DE LÓGICA DE RADIO BUTTONS ---
+        else {
+            textoALeer = "Campo. ";
+            const label = elemento.previousElementSibling;
+            
+            if (label && label.tagName === 'LABEL') {
+                textoALeer += label.innerText + ". ";
+            }
+            
+            if (elemento.tagName === 'SELECT') {
+                const opcionActual = elemento.options[elemento.selectedIndex].text;
+                textoALeer += "Lista desplegable. Use flechas arriba y abajo. Opción actual: " + opcionActual;
+            } else if (elemento.id === 'reporte-captcha') {
+                const sumaTexto = document.getElementById('captcha-text').innerText;
+                textoALeer = "Seguridad. Escriba el resultado de: " + sumaTexto;
+            } else if (elemento.id === 'login-captcha') {
+                const sumaTexto = document.getElementById('login-captcha-text').innerText;
+                textoALeer = "Seguridad. Escriba el resultado de: " + sumaTexto;
+            } else if (elemento.id === 'victima-captcha') {
+                const sumaTexto = document.getElementById('victima-captcha-text').innerText;
+                textoALeer = "Seguridad. Escriba el resultado de: " + sumaTexto;
+            } else {
+                if (elemento.placeholder && elemento.placeholder !== '?') textoALeer += elemento.placeholder;
+            }
+        }
+        
+        leerTexto(textoALeer);
+    } 
+    // 2. SI ES UN BOTÓN
+    else if (elemento.tagName === 'BUTTON') {
+        let textoBoton = elemento.innerText.trim() || elemento.title || "sin texto";
+        if(textoBoton !== "") leerTexto("Botón: " + textoBoton);
+    } 
+    // 3. SI ES UN ENLACE
+    else if (elemento.tagName === 'A') {
+        let textoEnlace = elemento.innerText.trim();
+        if(textoEnlace !== "") leerTexto("Enlace: " + textoEnlace);
+    }
+    // 4. SI ES EL PANEL DE RESULTADOS (NUEVO)
+    else if (elemento.tagName === 'DIV' && (elemento.id === 'panel-resultado-psico' || elemento.id === 'panel-resultado-lgb')) {
+        let titulo = elemento.querySelector('p').innerText;
+        // Buscamos el texto del número y el texto del globo de alerta
+        let puntaje = elemento.querySelector('[id^="risk-score"]').innerText;
+        let nivel = elemento.querySelector('[id^="risk-badge"]').innerText;
+        
+        leerTexto("Resultado del tamizaje. " + titulo + ": " + puntaje + " puntos. Nivel de alerta: " + nivel);
+    }
+});
+
+// Leer cuando el usuario cambia una opción en un Select con las flechas
+document.addEventListener('change', function(e) {
+    if (!asistenteVozActivo) return;
+    if (e.target.tagName === 'SELECT') {
+        const nuevaOpcion = e.target.options[e.target.selectedIndex].text;
+        leerTexto("Seleccionado: " + nuevaOpcion);
+    }
+});
+
+// ==========================================
+// 9. GESTOR DE HISTORIAS DE USUARIO (MODAL)
+// ==========================================
+const userStories = {
+    'versiones': { 
+        title: 'KREIVO: Actualizaciones', 
+        role: 'Equipo Desarrollador', 
+        content: `
+            <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 mt-2">
+                <h4 class="font-bold text-[#B53D75] mb-3">Versión 3.3 (10/3/2026)</h4>
+                <ul class="space-y-3">
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">1</span> 
+                        <span>Tres formularios independientes por rol (Víctima / Funcionarios / Terceros).</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">2</span> 
+                        <span>Activación <i>voice audio</i> (Text-to-Speech) para accesibilidad en formularios.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">3</span> 
+                        <span>Botón de tickets integrado para recopilación de <i>feedback</i> contextual.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">4</span> 
+                        <span>Acceso a Módulo MASP - App Mobil SALVIA.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">5</span> 
+                        <span>Constructor SuperAdmin</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">6</span> 
+                        <span>Front similar al original</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">6</span> 
+                        <span>Interactividad y relacionamiento de preguntas, esquema de la base de datos optimizada</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">7</span> 
+                        <span>Arquitectura por medio de EAV (Entity-Attribute-Value)</span>
+                    </li>
+                </ul>
+            </div>
+        ` 
+    },
+    'glosario': { 
+        title: 'Glosario SALVIA', 
+        role: 'MinIgualdad', 
+        // Nota el uso de la comilla invertida al inicio y al final
+        content: `
+            <div class="overflow-x-auto rounded-lg shadow border border-gray-200 mt-2">
+                <table class="min-w-full text-left text-sm text-gray-700">
+                    <thead class="bg-[#380E44] text-white">
+                        <tr>
+                            <th class="px-4 py-3 font-bold uppercase tracking-wider text-xs">Término / Sigla</th>
+                            <th class="px-4 py-3 font-bold uppercase tracking-wider text-xs">Definición</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr class="bg-white hover:bg-gray-50"><td class="px-4 py-3 font-bold text-[#380E44]">SALVIA</td><td class="px-4 py-3">Sistema de información y protocolo operativo para la atención de víctimas de VBG/VPP.</td></tr>
+                        <tr class="bg-gray-50 hover:bg-gray-100"><td class="px-4 py-3 font-bold text-[#380E44]">VBG</td><td class="px-4 py-3">Violencia Basada en Género.</td></tr>
+                        <tr class="bg-white hover:bg-gray-50"><td class="px-4 py-3 font-bold text-[#380E44]">VPP</td><td class="px-4 py-3">Violencia contra la Pareja y en el ámbito familiar.</td></tr>
+                        <tr class="bg-gray-50 hover:bg-gray-100"><td class="px-4 py-3 font-bold text-[#380E44]">NNA</td><td class="px-4 py-3">Niños, Niñas y Adolescentes.</td></tr>
+                        <tr class="bg-white hover:bg-gray-50"><td class="px-4 py-3 font-bold text-[#380E44]">ASP</td><td class="px-4 py-3">Agente Social de Protección (equipo en territorio).</td></tr>
+                        <tr class="bg-gray-50 hover:bg-gray-100"><td class="px-4 py-3 font-bold text-[#380E44]">PQRS</td><td class="px-4 py-3">Peticiones, Quejas, Reclamos y Sugerencias.</td></tr>
+                        <tr class="bg-white hover:bg-gray-50"><td class="px-4 py-3 font-bold text-[#380E44]">Enrutamiento</td><td class="px-4 py-3">Proceso de referir a la víctima a las instituciones o servicios que corresponden.</td></tr>
+                        <tr class="bg-gray-50 hover:bg-gray-100"><td class="px-4 py-3 font-bold text-[#380E44]">Mec. Articulador</td><td class="px-4 py-3">Instancia de coordinación que facilita la respuesta institucional.</td></tr>
+                        <tr class="bg-white hover:bg-gray-50"><td class="px-4 py-3 font-bold text-[#380E44]">Medidas Emergencia</td><td class="px-4 py-3">Apoyos inmediatos (alojamiento, transporte) para proteger a la víctima.</td></tr>
+                        <tr class="bg-gray-50 hover:bg-gray-100"><td class="px-4 py-3 font-bold text-[#380E44]">Riesgo Feminicida</td><td class="px-4 py-3">Valoración del peligro para la vida (extremo, alto, moderado, bajo, sin riesgo).</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        ` 
+    },
+    'reporte_terceros': { title: 'Registro de Contacto indirecto', role: 'Familiar / Amigo / Vecino / + Equipo Territorial / ASP', content: '"Como allegado de una ciudadana en situación de riesgo, quiero poder registrar sus datos demográficos básicos y una descripción de los hechos en un formulario seguro, para que el sistema por medio del Agente Integral active una alerta temprana y la Línea 155 pueda contactarla."' },
+    'registro_victima': { title: 'Registro de Contacto directo', role: 'Víctima', content: '"Como ciudadana en situación de riesgo, quiero poder registrar mis datos demográficos básicos y una descripción de los hechos en un formulario seguro que valide mi identidad, para que el sistema active una alerta temprana y la Línea 155 pueda contactarme. Y quiero poder hacer seguimiento a mi caso una vez ya registrado"' },
+    'registro_funcionarios': { title: 'Acceso de Funcionarios', role: 'Agente Integral', content: '"Primer contacto con la víctima. Crea el registro SALVIA, realiza la valoración de riesgo inicial y enruta el caso. Como operador de la Línea 155, necesito un portal de acceso seguro que valide mi identidad, para poder ingresar al sistema y visualizar los casos reportados por las ciudadanas manteniendo la confidencialidad."' },
+    'panel_control': { title: 'Panel de Control Estratégico', role: 'Gestora de Caso', content: '"Como supervisor, necesito visualizar métricas en tiempo real sobre los casos reportados, niveles de riesgo y tiempos de respuesta, para tomar decisiones informadas y asignar recursos eficientemente en la red de atención."' },
+    'seguimiento_casos': { title: 'Monitoreo de Rutas', role: 'Gestora de Caso / Agente Integral / Territorial / SALVIA Nacional', content: '"Como operador, quiero ver una bandeja de entrada con los casos recién reportados, ordenados por urgencia y semaforizados, para poder iniciar el contacto de manera prioritaria y activar la ruta institucional."' },
+    'tamizaje_riesgo': { title: 'Valoración Técnica de Riesgo', role: 'Equipo Psicosocial / Comisaría', content: '"Como profesional en la ruta, necesito aplicar un cuestionario estandarizado que calcule automáticamente el riesgo de feminicidio, para clasificar el nivel de alerta (Extremo, Moderado, Bajo) y justificar medidas de protección."' },
+    'modulo_masp': { title: 'Módulo MASP', role: 'Mujeres en Actividades Sexuales Pagas', content: '"Como usuaria del ecosistema MASP, necesito contar con un botón de pánico y un canal de reporte discreto que me permita alertar a las autoridades si me encuentro en una situación de violencia en mi entorno laboral."' },
+    'modulo_lgbtiq': { title: 'Enfoque Diferencial de Género', role: 'Analista de Casos', content: '"Como analista, necesito visualizar indicadores y variables específicas de identidad de género y orientación sexual, para garantizar que la atención cumpla con el enfoque diferencial y no revictimice a la población diversa."' },
+    'motor_formularios': { title: 'Dinamismo a preguntas relacionadas', role: 'Superuser', content: '"Como super usuario, quiero crear un diccionario dinámico donde pueda definir: la pregunta, el tipo (texto, select, radio) y las reglas de dependencia entre pregunas"' },
+    'arquitectura': { title: 'ERD ', role: 'Kreivo', 
+        content: `
+            <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 mt-2">
+                <h4 class="font-bold text-[#B53D75] mb-3">El resumen técnico discute la eficiencia de la arquitectura EAV + DAG.</h4>
+                <ul class="space-y-3">
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">1</span> 
+                        <span>El problema con el diseño de la tabla plana (ERD tradicional) es que requiere ALTER TABLE para agregar nuevas variables, lo que conduce a la ineficiencia del espacio y a la rigidez operativa.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">2</span> 
+                        <span>La solución propuesta es el modelo EAV (Entity-Attribute-Value), que crece hacia abajo (filas) en lugar de hacia los lados (columnas).</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">3</span> 
+                        <span>El modelo EAV elimina los valores nulos al guardar solo filas para las preguntas que se respondieron, lo que resulta en un ahorro de espacio y una mejor eficiencia operativa.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">4</span> 
+                        <span>El modelo EAV también aborda el problema de la rigidez operativa en lenguajes de backend como Go (Golang) al eliminar la necesidad de punteros complejos.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">5</span> 
+                        <span>El Catalogo_Preguntas es una tabla donde se almacenan todas las preguntas.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">6</span> 
+                        <span>Para agregar una nueva pregunta, solo se necesita insertar una nueva fila en la tabla.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">6</span> 
+                        <span>No es necesario modificar el código del servidor o las tablas existentes.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">7</span> 
+                        <span>El Grafo Acíclico Dirigido (DAG) gestiona la lógica de negocio y la experiencia de usuario.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">8</span> 
+                        <span>El DAG permite dependencias dinámicas, lo que significa que las preguntas solo se pueden mostrar en función de las respuestas anteriores.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">9</span> 
+                        <span>El DAG evita ciclos, asegurando que el formulario nunca quede atascado en una serie de preguntas.</span>
+                    </li>
+                </ul>
+            </div>
+        `},
+}; 
+
+function abrirModalHistoria(storyKey) {
+    const story = userStories[storyKey];
+    if (!story) return;
+    document.getElementById('story-title').innerHTML = `<i class="fa-solid fa-book-open mr-2"></i> ${story.title}`;
+    document.getElementById('story-role').innerText = `Rol: ${story.role}`;
+    document.getElementById('story-content').innerHTML = story.content;
+    document.getElementById('story-modal').classList.remove('hidden');
+}
+function cerrarModalHistoria() { document.getElementById('story-modal').classList.add('hidden'); }
+
+// ==========================================
+// 10. MENÚ MÓVIL Y MOTOR DE RIESGO
+// ==========================================
+function toggleMenuMovil() { document.getElementById('menu-movil').classList.toggle('hidden'); }
+
+document.querySelectorAll('.risk-calc').forEach(radio => {
+    radio.addEventListener('change', () => {
+        let totalScore = 0;
+        document.querySelectorAll('.risk-calc:checked').forEach(c => totalScore += parseInt(c.value));
+        const scoreDisplay = document.getElementById('risk-score');
+        const badge = document.getElementById('risk-badge');
+        scoreDisplay.innerText = totalScore;
+        if(totalScore >= 15) {
+            scoreDisplay.className = "text-6xl font-black text-red-600 transition-colors";
+            badge.innerText = "ALERTA VITAL - RIESGO EXTREMO";
+            badge.className = "mt-4 inline-block px-4 py-1.5 rounded-full bg-red-100 text-red-600 font-bold text-sm animate-bounce";
+        } else if(totalScore >= 5) {
+            scoreDisplay.className = "text-6xl font-black text-amber-500 transition-colors";
+            badge.innerText = "RIESGO MODERADO - SEGUIMIENTO";
+            badge.className = "mt-4 inline-block px-4 py-1.5 rounded-full bg-amber-100 text-amber-600 font-bold text-sm";
+        } else {
+            scoreDisplay.className = "text-6xl font-black text-slate-800 transition-colors";
+            badge.innerText = "RIESGO BAJO";
+            badge.className = "mt-4 inline-block px-4 py-1.5 rounded-full bg-slate-100 text-slate-600 font-bold text-sm";
+        }
+    });
+});
+
+// ==========================================
+// CALCULADOR DE RIESGO LGBTIQ+ (PREJUICIO)
+// ==========================================
+document.querySelectorAll('.risk-calc-lgb').forEach(radio => {
+    radio.addEventListener('change', () => {
+        let totalScore = 0;
+        // Sumar solo los radios seleccionados de la clase lgb
+        document.querySelectorAll('.risk-calc-lgb:checked').forEach(c => totalScore += parseInt(c.value));
+        
+        const scoreDisplay = document.getElementById('risk-score-lgb');
+        const badge = document.getElementById('risk-badge-lgb');
+        
+        scoreDisplay.innerText = totalScore;
+        
+        // Reglas de negocio para LGBTIQ+
+        if(totalScore >= 12) {
+            scoreDisplay.className = "text-6xl font-black text-red-600 transition-colors";
+            badge.innerText = "ALERTA CRÍTICA - RIESGO DE VIDA";
+            badge.className = "mt-4 inline-block px-4 py-1.5 rounded-full bg-red-100 text-red-600 font-bold text-sm animate-bounce";
+        } else if(totalScore >= 6) {
+            scoreDisplay.className = "text-6xl font-black text-orange-500 transition-colors";
+            badge.innerText = "VULNERABILIDAD ALTA - AISLAMIENTO";
+            badge.className = "mt-4 inline-block px-4 py-1.5 rounded-full bg-orange-100 text-orange-700 font-bold text-sm";
+        } else if(totalScore >= 3) {
+            scoreDisplay.className = "text-6xl font-black text-amber-500 transition-colors";
+            badge.innerText = "VULNERABILIDAD MODERADA";
+            badge.className = "mt-4 inline-block px-4 py-1.5 rounded-full bg-amber-100 text-amber-600 font-bold text-sm";
+        } else {
+            scoreDisplay.className = "text-6xl font-black text-slate-800 transition-colors";
+            badge.innerText = "BAJA VULNERABILIDAD";
+            badge.className = "mt-4 inline-block px-4 py-1.5 rounded-full bg-slate-100 text-slate-600 font-bold text-sm";
+        }
+    });
+});
+
+// ==========================================
+// 11. SISTEMA DE FEEDBACK CONTEXTUAL (GOOGLE FORMS)
+// ==========================================
+function abrirFormularioFeedback() {
+    // La URL base de tu formulario
+    const baseUrl = "https://docs.google.com/forms/d/e/1FAIpQLSc4qDbw38kp5I5DKDXM8EF-DoH4QcBI8dEdJ3K60aIRsRDLXA/viewform";
+    // El ID exacto de la pregunta "Módulo o Vista Actual"
+    const entryId = "entry.675421179";
+    
+    // Convertimos el texto (ej. "Portal Público (Inicio)") a formato URL (ej. Portal%20P%C3%BAblico...)
+    const vistaCodificada = encodeURIComponent(vistaActualGlobal);
+    
+    // Ensamblamos la URL final
+    const urlFinal = `${baseUrl}?usp=pp_url&${entryId}=${vistaCodificada}`;
+    
+    // Abrimos el formulario en una nueva pestaña
+    window.open(urlFinal, '_blank');
+}
+
+// ==========================================
+// 12. MOTOR EAV AVANZADO (GRAFO ACÍCLICO DIRIGIDO - DAG) UNIVERSAL
+// ==========================================
+
+// Ahora recibe el ID del contenedor como parámetro
+function renderizarFormularioDinamico(containerId) {
+    const contenedor = document.getElementById(containerId);
+    if (!contenedor) return;
+    
+    contenedor.className = "grid grid-cols-1 md:grid-cols-4 gap-x-4 gap-y-5 pb-6";
+    contenedor.innerHTML = ''; 
+    
+    Object.keys(dicPreguntas).forEach(codigo => {
+        const campo = dicPreguntas[codigo];
+        const div = document.createElement('div');
+        // El ID del HTML ahora lleva el nombre del contenedor para evitar colisiones
+        div.id = `wrapper_${containerId}_${codigo}`;
+        div.className = "slide-in hidden"; 
+        
+        const colSpanClass = campo.colSpan === 4 ? 'md:col-span-4' : campo.colSpan === 2 ? 'md:col-span-2' : 'md:col-span-1';
+        div.classList.add(colSpanClass);
+
+        let inputHTML = '';
+        if (campo.type === 'section') {
+            div.className = "col-span-1 md:col-span-4 client-section-header mt-6";
+            div.innerHTML = `<i class="fa-solid ${campo.icon}"></i><h2>${campo.label}</h2>`;
+        } else {
+            const label = `<label class="client-input-label">${campo.label}</label>`;
+            const inputClass = "client-input-field bg-white";
+            
+            // Inyectamos el evento onchange pasando el containerId
+            const onchangeStr = `evaluarDAG('${containerId}')`;
+
+            if (campo.type === 'text' || campo.type === 'number' || campo.type === 'date') {
+                inputHTML = `<input type="${campo.type}" id="${containerId}_${codigo}" class="${inputClass}" onchange="${onchangeStr}">`;
+            } else if (campo.type === 'textarea') {
+                inputHTML = `<textarea id="${containerId}_${codigo}" rows="3" class="${inputClass}" onchange="${onchangeStr}"></textarea>`;
+            } else if (campo.type === 'boolean') {
+                inputHTML = `<select id="${containerId}_${codigo}" onchange="${onchangeStr}" class="${inputClass}">
+                    <option value="">Seleccione...</option><option value="true">Sí</option><option value="false">No</option>
+                </select>`;
+            } else if (campo.type === 'select') {
+                let optionsHTML = campo.options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+                inputHTML = `<select id="${containerId}_${codigo}" onchange="${onchangeStr}" class="${inputClass}">${optionsHTML}</select>`;
+            }
+            div.innerHTML = label + inputHTML;
+        }
+        contenedor.appendChild(div);
+    });
+
+    // Solo actualizamos el cuadro negro de JSON si estamos en el Constructor
+    if (containerId === 'dynamic-form-preview') {
+        const btnContainer = document.createElement('div');
+        btnContainer.className = "col-span-1 md:col-span-4 flex justify-center mt-6 border-t pt-4";
+        btnContainer.innerHTML = `<button type="button" class="client-btn-success shadow-md text-sm py-3 px-10">Guardar y Continuar</button>`;
+        contenedor.appendChild(btnContainer);
+
+        const vistaCodigo = `// DICCIONARIO\n${JSON.stringify(dicPreguntas, null, 2)}\n\n// ÁRBOL DAG\n${JSON.stringify(arbolRelaciones, null, 2)}`;
+        const previewBox = document.getElementById('json-preview');
+        if(previewBox) previewBox.innerText = vistaCodigo;
+    }
+    
+    evaluarDAG(containerId);
+}
+
+function evaluarDAG(containerId) {
+    let nodosVisibles = new Set();
+    
+    // MAGIA: Elegimos la raíz dependiendo de quién está viendo el formulario
+    // Si estamos en el Constructor EAV, mostramos el formulario completo (funcionario).
+    // Si estamos en la vista pública, usamos el rol que el usuario seleccionó.
+    let llaveRaiz = containerId === 'dynamic-form-preview' ? 'raices_funcionario' : `raices_${rolActual}`;
+
+    if(arbolRelaciones[llaveRaiz]) {
+        arbolRelaciones[llaveRaiz].forEach(codigo => nodosVisibles.add(codigo));
+    }
+
+    let cola = [...nodosVisibles];
+    
+    while(cola.length > 0) {
+        let codigoActual = cola.shift();
+        const inputActual = document.getElementById(`${containerId}_${codigoActual}`);
+        
+        if (arbolRelaciones[codigoActual] && inputActual) {
+            const valorActual = inputActual.value; 
+            
+            if (arbolRelaciones[codigoActual][valorActual]) {
+                let hijosAAgregar = arbolRelaciones[codigoActual][valorActual];
+                
+                hijosAAgregar.forEach(hijo => {
+                    nodosVisibles.add(hijo);
+                    cola.push(hijo); 
+                });
+            }
+        }
+    }
+
+    Object.keys(dicPreguntas).forEach(codigo => {
+        const wrapper = document.getElementById(`wrapper_${containerId}_${codigo}`);
+        const input = document.getElementById(`${containerId}_${codigo}`);
+        
+        if (wrapper && input) {
+            if (nodosVisibles.has(codigo)) {
+                wrapper.classList.remove('hidden');
+            } else {
+                wrapper.classList.add('hidden');
+                if(input.tagName === 'SELECT') input.selectedIndex = 0;
+                else input.value = '';
+            }
+        } else if (wrapper && dicPreguntas[codigo].type === 'section') {
+            if (nodosVisibles.has(codigo)) wrapper.classList.remove('hidden');
+            else wrapper.classList.add('hidden');
+        }
+    });
+}
+
+function agregarCampoPrueba() {
+    alert("¡El DAG ya está operativo! Modifique el archivo salvia_esquema.js para agregar nuevos nodos al árbol.");
+}
+
+// ==========================================
+// INICIALIZADOR GENERAL
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    if(typeof navPublic === 'function') navPublic('home-view');
+    if(typeof cargarCacheAlInicio === 'function') cargarCacheAlInicio(); 
+    if(typeof generarCaptchas === 'function') generarCaptchas();
+    
+    // ¡AQUÍ ESTÁ LA MAGIA! Ejecutamos el motor en AMBOS lados al mismo tiempo
+    renderizarFormularioDinamico('eav-public-container'); // Para la vista pública
+    renderizarFormularioDinamico('dynamic-form-preview'); // Para el Constructor EAV
+});
+
