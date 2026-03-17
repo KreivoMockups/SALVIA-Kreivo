@@ -53,6 +53,11 @@ function prepararFormulario(rol) {
         instruccion.innerHTML = "<strong>Orientación Operador:</strong> Diligencie los datos proporcionados por la ciudadana en la llamada. Verifique el número de contacto.";
         btnSubmit.innerText = "Radicar Caso en el Sistema";
         if(cajaCredenciales) cajaCredenciales.classList.add('hidden'); 
+    } else if (rol === 'kobo') {
+        titulo.innerText = "Seguimiento de Casos (Kobo)";
+        instruccion.innerHTML = "<strong>Orientación:</strong> Diligencie este esquema de seguimiento para el registro de acciones de Riesgo Extremo, Alto y General.";
+        btnSubmit.innerText = "Guardar Seguimiento";
+        if(cajaCredenciales) cajaCredenciales.classList.add('hidden'); // Ocultamos la caja de contraseñas
     }
     
     generarCaptchas();
@@ -434,7 +439,7 @@ const userStories = {
         role: 'Equipo Desarrollador', 
         content: `
             <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 mt-2">
-                <h4 class="font-bold text-[#B53D75] mb-3">Versión 3.3 (10/3/2026)</h4>
+                <h4 class="font-bold text-[#B53D75] mb-3">Versión 4 (16/3/2026)</h4>
                 <ul class="space-y-3">
                     <li class="flex items-start">
                         <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">1</span> 
@@ -468,6 +473,10 @@ const userStories = {
                         <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">7</span> 
                         <span>Arquitectura por medio de EAV (Entity-Attribute-Value)</span>
                     </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">7</span> 
+                        <span>Simulador KOBO</span>
+                    </li>
                 </ul>
             </div>
         ` 
@@ -496,19 +505,271 @@ const userStories = {
                         <tr class="bg-gray-50 hover:bg-gray-100"><td class="px-4 py-3 font-bold text-[#380E44]">Mec. Articulador</td><td class="px-4 py-3">Instancia de coordinación que facilita la respuesta institucional.</td></tr>
                         <tr class="bg-white hover:bg-gray-50"><td class="px-4 py-3 font-bold text-[#380E44]">Medidas Emergencia</td><td class="px-4 py-3">Apoyos inmediatos (alojamiento, transporte) para proteger a la víctima.</td></tr>
                         <tr class="bg-gray-50 hover:bg-gray-100"><td class="px-4 py-3 font-bold text-[#380E44]">Riesgo Feminicida</td><td class="px-4 py-3">Valoración del peligro para la vida (extremo, alto, moderado, bajo, sin riesgo).</td></tr>
+                        <tr class="bg-gray-50 hover:bg-gray-100"><td class="px-4 py-3 font-bold text-[#380E44]">EAIF</td><td class="px-4 py-3">Equipo de Abordaje Integral del Feminicidio</td></tr>
                     </tbody>
                 </table>
             </div>
         ` 
     },
-    'reporte_terceros': { title: 'Registro de Contacto indirecto', role: 'Familiar / Amigo / Vecino / + Equipo Territorial / ASP', content: '"Como allegado de una ciudadana en situación de riesgo, quiero poder registrar sus datos demográficos básicos y una descripción de los hechos en un formulario seguro, para que el sistema por medio del Agente Integral active una alerta temprana y la Línea 155 pueda contactarla."' },
+    'reporte_terceros': { title: 'Registro de Contacto indirecto', role: 'Profesional de M asculinidades / Familiar / Amigo / Vecino / + Equipo Territorial / ASP', 
+        content: 
+        `
+            <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 mt-2">
+                <h4 class="font-bold text-[#B53D75] mb-3">Como allegado de una ciudadana en situación de riesgo, quiero poder registrar sus datos demográficos básicos y una descripción de los hechos en un formulario seguro, para que el sistema por medio del Profesional de Masculinidades active una alerta temprana y la Línea 155 pueda contactarla. Profesional de Masculinidades: Formación en Psicología, Trabajo Social, Sociología o Estudios de Género. Inter viene en las raíces simbólicas y sociales de la violencia.</h4>
+                <ul class="space-y-3">
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">1</span> 
+                        <span>Diseñar e implementar procesos de sensibilización sobre mascuinidades no violentas</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">2</span> 
+                        <span>Trabajar con hombres vinculados a casos del sistema</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">3</span> 
+                        <span>Contribuir a estrategias de prevención secundaria y terciaria</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">4</span> 
+                        <span>Aportar análisis estructural sobre dinámicas patriarcales en los casos</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">5</span> 
+                        <span>Articular con el equipo psicosocial y EAIF cuando el caso lo requiera</span>
+                    </li>
+                </ul>
+            </div>
+        `
+    },
     'registro_victima': { title: 'Registro de Contacto directo', role: 'Víctima', content: '"Como ciudadana en situación de riesgo, quiero poder registrar mis datos demográficos básicos y una descripción de los hechos en un formulario seguro que valide mi identidad, para que el sistema active una alerta temprana y la Línea 155 pueda contactarme. Y quiero poder hacer seguimiento a mi caso una vez ya registrado"' },
-    'registro_funcionarios': { title: 'Acceso de Funcionarios', role: 'Agente Integral', content: '"Primer contacto con la víctima. Crea el registro SALVIA, realiza la valoración de riesgo inicial y enruta el caso. Como operador de la Línea 155, necesito un portal de acceso seguro que valide mi identidad, para poder ingresar al sistema y visualizar los casos reportados por las ciudadanas manteniendo la confidencialidad."' },
-    'panel_control': { title: 'Panel de Control Estratégico', role: 'Gestora de Caso', content: '"Como supervisor, necesito visualizar métricas en tiempo real sobre los casos reportados, niveles de riesgo y tiempos de respuesta, para tomar decisiones informadas y asignar recursos eficientemente en la red de atención."' },
-    'seguimiento_casos': { title: 'Monitoreo de Rutas', role: 'Gestora de Caso / Agente Integral / Territorial / SALVIA Nacional', content: '"Como operador, quiero ver una bandeja de entrada con los casos recién reportados, ordenados por urgencia y semaforizados, para poder iniciar el contacto de manera prioritaria y activar la ruta institucional."' },
-    'tamizaje_riesgo': { title: 'Valoración Técnica de Riesgo', role: 'Equipo Psicosocial / Comisaría', content: '"Como profesional en la ruta, necesito aplicar un cuestionario estandarizado que calcule automáticamente el riesgo de feminicidio, para clasificar el nivel de alerta (Extremo, Moderado, Bajo) y justificar medidas de protección."' },
+    'registro_funcionarios': { title: 'Acceso de Funcionarios', role: 'Agente Integral', 
+        content: 
+        `
+            <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 mt-2">
+                <h4 class="font-bold text-[#B53D75] mb-3">Primer contacto con la víctima. Crea el registro SALVIA, realiza la valoración de riesgo inicial y enruta el caso. Como operador de la Línea 155, necesito un portal de acceso seguro que valide mi identidad, para poder ingresar al sistema y visualizar los casos reportados por las ciudadanas manteniendo la confidencialidad.</h4>
+                <ul class="space-y-3">
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">1</span> 
+                        <span>Recepción y aper tura de la atención</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">2</span> 
+                        <span>Validación de condiciones de seguridad inmediata</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">3</span> 
+                        <span>Verificación de antecedentes en SALVIA y evitar duplicidad</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">4</span> 
+                        <span>Registro literal del relato de forma fiel y cronológica</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">5</span> 
+                        <span>Caracterización interseccional (variables sociodemográficas)</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">6</span> 
+                        <span>Valoración del riesgo con herramienta técnica del sistema</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">7</span> 
+                        <span>Activación de alertas tempranas y medidas urgentes</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">8</span> 
+                        <span>Enrutamiento sectorial a la entidad competente</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">9</span> 
+                        <span>Información clara a la ciudadana sobre rutas y tiempos</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">10</span> 
+                        <span>Cierre de la inter vención inicial y escalamiento</span>
+                    </li>
+                </ul>
+            </div>
+        `
+    },
+    'panel_control': { title: 'Panel de Control Estratégico', role: 'Gestora de Caso / Supervisor(a) ', 
+        content: 
+        `
+            <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 mt-2">
+                <h4 class="font-bold text-[#B53D75] mb-3">Como supervisor, necesito visualizar métricas en tiempo real sobre los casos reportados, niveles de riesgo y tiempos de respuesta, para tomar decisiones informadas y asignar recursos eficientemente en la red de atención. Rol técnico estratégico de calidad metodológica y cumplimiento normativo. Verifica la correcta aplicación del ciclo operativo completo y del enfoque interseccional.</h4>
+                <ul class="space-y-3">
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">1</span> 
+                        <span>Verificar la correcta aplicación de cada etapa del ciclo operativo</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">2</span> 
+                        <span>Revisar muestras de casos evaluando calidad del registro y trazabilidad</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">3</span> 
+                        <span>Supervisar que la valoración del riesgo incorpore el análisis interseccional</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">4</span> 
+                        <span>Identificar omisiones e inconsistencias y ordenar ajustes técnicos</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">5</span> 
+                        <span>Asegurar que la gestión de barreras incluya acciones concretas</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">6</span> 
+                        <span>Verificar confidencialidad y tratamiento de datos personales</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">7</span> 
+                        <span>Garantizar que los cierres técnicos estén debidamente motivados</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">8</span> 
+                        <span>Elaborar reportes periódicos de calidad y recomendar mejoras</span>
+                    </li>
+                </ul>
+            </div>
+        `
+    },
+    'seguimiento_casos': { title: 'Monitoreo de Rutas', role: 'Gestora de Caso / Agente Integral / Territorial / SALVIA Nacional', 
+        content: 
+        `
+            <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 mt-2">
+                <h4 class="font-bold text-[#B53D75] mb-3">Como operador, quiero ver una bandeja de entrada con los casos recién reportados, ordenados por urgencia y semaforizados, para poder iniciar el contacto de manera prioritaria y activar la ruta institucional. Realiza el monitoreo técnico, continuo y especializado de los casos una vez activadas las rutas. Garantiza que la respuesta institucional no se limite a la remisión.</h4>
+                <ul class="space-y-3">
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">1</span> 
+                        <span>Recepción del caso y verificación de la información registrada</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">2</span> 
+                        <span>Contacto seguro y verificación de condiciones actuales</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">3</span> 
+                        <span>Verificación de la respuesta institucional por entidad</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">4</span> 
+                        <span>Identificación, análisis y gestión de barreras institucionales</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">5</span> 
+                        <span>Evaluación de persistencia de barreras y activación de Alertas</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">6</span> 
+                        <span>Actualización de la valoración del riesgo</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">7</span> 
+                        <span>Orientación en derechos con enfoque de género</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">8</span> 
+                        <span>Registro y trazabilidad de cada contacto realizado</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">9</span> 
+                        <span>Determinación de continuidad o cierre técnico del caso</span>
+                    </li>
+                </ul>
+            <h4 class="font-bold text-[#B53D75] mb-3">Equipo de Notificación SALVIA: 5 profesionales en áreas sociales o afines. Especializados en gestión documental, radicación y comunicaciones institucionales. M anejan el correo salvia.pqrsd.</h4>    
+                <ul>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">1</span> 
+                        <span>Primera verificación de notificaciones y salida de comunicaciones de alertas / barreras</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">2</span> 
+                        <span>Revisión de casos ingresados por salvia.pqrsd</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">3</span> 
+                        <span>Validación formal de oficios proyectados por equipos técnicos</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">4</span> 
+                        <span>Radicación de oficios y comunicaciones en los sistemas establecidos</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">5</span> 
+                        <span>Registro de respuestas institucionales para agentes y equipos</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">5</span> 
+                        <span>Comunicación operativa con enlaces territoriales para radicación y confirmación</span>
+                    </li>
+                </ul>
+            </div>
+        `
+    },
+    'tamizaje_riesgo': { title: 'Valoración Técnica de Riesgo', role: 'Equipo Psicosocial / Comisaría', 
+        content: 
+        `
+            <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 mt-2">
+                <h4 class="font-bold text-[#B53D75] mb-3">Como profesional en la ruta, necesito aplicar un cuestionario estandarizado que calcule automáticamente el riesgo de feminicidio, para clasificar el nivel de alerta (Extremo, Moderado, Bajo) y justificar medidas de protección. Equipo de Abordaje Integral del Feminicidio (EAIF)</h4>
+                <ul class="space-y-3">
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">1</span> 
+                        <span>Activar y articular medidas de emergencia (Policía, Fiscalía, comisarías)</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">2</span> 
+                        <span>Seguimiento intensivo y continuo a casos de riesgo alto / extremo</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">3</span> 
+                        <span>Articulación interinstitucional integral (psicosocial, estabilización, barreras)</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">4</span> 
+                        <span>Documentación rigurosa y trazabilidad de todas las actuaciones</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">5</span> 
+                        <span>Identificación de patrones y fallas en la activación de rutas</span>
+                    </li>
+                </ul>
+            </div>
+        `
+    },
     'modulo_masp': { title: 'Módulo MASP', role: 'Mujeres en Actividades Sexuales Pagas', content: '"Como usuaria del ecosistema MASP, necesito contar con un botón de pánico y un canal de reporte discreto que me permita alertar a las autoridades si me encuentro en una situación de violencia en mi entorno laboral."' },
-    'modulo_lgbtiq': { title: 'Enfoque Diferencial de Género', role: 'Analista de Casos', content: '"Como analista, necesito visualizar indicadores y variables específicas de identidad de género y orientación sexual, para garantizar que la atención cumpla con el enfoque diferencial y no revictimice a la población diversa."' },
+    'modulo_lgbtiq': { title: 'Enfoque Diferencial de Género', role: 'Analista de Casos', 
+        content: `
+            <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 mt-2">
+                <h4 class="font-bold text-[#B53D75] mb-3">Como analista, necesito visualizar indicadores y variables específicas de identidad de género y orientación sexual, para garantizar que la atención cumpla con el enfoque diferencial y no revictimice a la población diversa. Formación en Psicología, Trabajo Social u otras ciencias sociales. Garantiza que la atención incorpore el bienestar emocional y la autonomía subjetiva de la víctima.</h4>
+                <ul class="space-y-3">
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">1</span> 
+                        <span>Atención psicosocial inicial y de seguimiento</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">2</span> 
+                        <span>Estabilización emocional en situaciones de crisis</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">3</span> 
+                        <span>Identificación de factores protectores y factores de riesgo</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">4</span> 
+                        <span>Acompañamiento en la activación de rutas desde una perspectiva de cuidado</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">5</span> 
+                        <span>Articulación con el equipo EAIF cuando se detecten señales de alerta</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">6</span> 
+                        <span>Registro técnico de la intervención en la plataforma</span>
+                    </li>
+                </ul>
+            </div>
+        `},
     'motor_formularios': { title: 'Dinamismo a preguntas relacionadas', role: 'Superuser', content: '"Como super usuario, quiero crear un diccionario dinámico donde pueda definir: la pregunta, el tipo (texto, select, radio) y las reglas de dependencia entre pregunas"' },
     'arquitectura': { title: 'ERD ', role: 'Kreivo', 
         content: `
@@ -540,19 +801,19 @@ const userStories = {
                         <span>Para agregar una nueva pregunta, solo se necesita insertar una nueva fila en la tabla.</span>
                     </li>
                     <li class="flex items-start">
-                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">6</span> 
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">7</span> 
                         <span>No es necesario modificar el código del servidor o las tablas existentes.</span>
                     </li>
                     <li class="flex items-start">
-                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">7</span> 
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">8</span> 
                         <span>El Grafo Acíclico Dirigido (DAG) gestiona la lógica de negocio y la experiencia de usuario.</span>
                     </li>
                     <li class="flex items-start">
-                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">8</span> 
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">9</span> 
                         <span>El DAG permite dependencias dinámicas, lo que significa que las preguntas solo se pueden mostrar en función de las respuestas anteriores.</span>
                     </li>
                     <li class="flex items-start">
-                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">9</span> 
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">10</span> 
                         <span>El DAG evita ciclos, asegurando que el formulario nunca quede atascado en una serie de preguntas.</span>
                     </li>
                 </ul>
@@ -685,7 +946,7 @@ function renderizarFormularioDinamico(containerId) {
             // Inyectamos el evento onchange pasando el containerId
             const onchangeStr = `evaluarDAG('${containerId}')`;
 
-            if (campo.type === 'text' || campo.type === 'number' || campo.type === 'date') {
+            if (campo.type === 'text' || campo.type === 'number' || campo.type === 'date' || campo.type === 'datetime-local') {
                 inputHTML = `<input type="${campo.type}" id="${containerId}_${codigo}" class="${inputClass}" onchange="${onchangeStr}">`;
             } else if (campo.type === 'textarea') {
                 inputHTML = `<textarea id="${containerId}_${codigo}" rows="3" class="${inputClass}" onchange="${onchangeStr}"></textarea>`;
@@ -696,6 +957,18 @@ function renderizarFormularioDinamico(containerId) {
             } else if (campo.type === 'select') {
                 let optionsHTML = campo.options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
                 inputHTML = `<select id="${containerId}_${codigo}" onchange="${onchangeStr}" class="${inputClass}">${optionsHTML}</select>`;
+            } 
+            // ---> EL ÚNICO AJUSTE VISUAL NECESARIO <---
+            else if (campo.type === 'multiselect') {
+                let optionsHTML = campo.options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+                // Le agregamos el atributo nativo "multiple" de HTML
+                inputHTML = `
+                    <select id="${containerId}_${codigo}" multiple size="4" onchange="${onchangeStr}" class="${inputClass} h-auto">
+                        ${optionsHTML}
+                    </select>
+                    <p class="text-[10px] text-gray-500 mt-1 leading-tight">
+                        <i class="fa-solid fa-hand-pointer mr-1"></i> Mantenga presionado Ctrl (Windows) o Cmd (Mac) para seleccionar varias opciones.
+                    </p>`;
             }
             div.innerHTML = label + inputHTML;
         }

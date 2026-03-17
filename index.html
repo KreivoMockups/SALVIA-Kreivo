@@ -48,12 +48,14 @@
                     <img src="assets/img/header_govco.png" alt="GOV.CO" class="h-6 md:h-8 object-contain">
                 </div>
                 <div>
-                    <h1>KREIVO</h1>
+                    <h1>KREIVO - MESAS DE TRABAJO</h1>
                 </div>
                 <nav class="hidden md:flex space-x-6 text-sm font-medium">
                     <a href="#" class="hover:text-gray-200 transition-colors">Transparencia</a>
                     <a href="#" class="hover:text-gray-200 transition-colors">Atención al ciudadano</a>
-                    <a href="#" class="hover:text-gray-200 transition-colors">Participa</a>
+                    <button onclick="prepararFormulario('kobo')" class="bg-[#B53D75] text-white px-6 py-2 rounded-full font-bold hover:bg-[#8e2d5a] transition-all transform hover:scale-105 shadow-md flex items-center">
+                        Kobo <i class="fa-solid fa-list-check ml-2"></i>
+                    </button>
                 </nav>
                 
                 <button onclick="toggleMenuMovil()" class="md:hidden text-white hover:text-gray-200 focus:outline-none p-1">
@@ -66,7 +68,9 @@
                 <nav class="flex flex-col px-4 py-3 space-y-3 text-sm font-medium">
                     <a href="#" class="block hover:underline py-1">Transparencia</a>
                     <a href="#" class="block hover:underline py-1">Atención al ciudadano</a>
-                    <a href="#" class="block hover:underline py-1">Participa</a>
+                    <button onclick="prepararFormulario('kobo')" class="bg-[#B53D75] text-white px-6 py-2 rounded-full font-bold hover:bg-[#8e2d5a] transition-all transform hover:scale-105 shadow-md flex items-center">
+                        Kobo <i class="fa-solid fa-list-check ml-2"></i>
+                    </button>
                 </nav>
             </div>
         </div>
@@ -705,7 +709,7 @@
                         </div>
 
                         <a href="masp_app.html" target="_blank" class="inline-flex items-center justify-center w-full sm:w-auto bg-[#380E44] text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:bg-purple-900 transition-all transform hover:scale-105">
-                            Abrir Mockup de App Móvil <i class="fa-solid fa-arrow-up-right-from-square ml-3"></i>
+                            Abrir mesa de Trabajo para App Móvil <i class="fa-solid fa-arrow-up-right-from-square ml-3"></i>
                         </a>
                         <p class="text-xs text-slate-400 mt-3"><i class="fa-solid fa-info-circle mr-1"></i> El enlace abrirá una nueva pestaña (masp_app.html).</p>
                     </div>
