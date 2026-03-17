@@ -72,42 +72,53 @@ function prepararFormulario(rol) {
 // ==========================================
 // 3. MOTOR DE DATOS Y CACHÉ (LOCALSTORAGE)
 // ==========================================
-function enviarReporte(e) {
-    e.preventDefault();
+function enviarReporte(event) {
+    event.preventDefault(); 
+    const contenedor = document.getElementById('eav-public-container');
+    const inputs = contenedor.querySelectorAll('input, select, textarea');
     
-    const tel = document.getElementById('reporte-tel').value;
-    // VALIDACIÓN ESTRICTA DE TELÉFONO
-    if (!tel || tel.trim() === '') {
-        alert("El número de teléfono es obligatorio para poder contactarla.");
-        if (asistenteVozActivo) leerTexto("Error. El campo de teléfono es obligatorio.");
-        return;
-    }
-
-    const captchaValor = document.getElementById('reporte-captcha').value;
-    if (captchaValor !== sumaCorrectaReporte.toString()) {
-        alert("Suma de verificación incorrecta. Intente de nuevo.");
-        generarCaptchas();
-        return;
-    }
-
-    let casosEnCache = JSON.parse(localStorage.getItem('casosSalvia')) || [];
-    const nuevoCaso = {
-        id: 'VBG-2026-' + Math.floor(1000 + Math.random() * 9000),
-        tel: tel,
-        fecha: 'Hace un momento',
-        rol: rolActual 
+    const idCaso = 'CASO-' + Math.floor(Math.random() * 100000);
+    const paqueteDatos = {
+        metadata: {
+            id_simulacion: idCaso,
+            fecha_registro: new Date().toISOString(),
+            fecha_humana: new Date().toLocaleString(), // <-- Fecha para la tabla
+            rol_usuario: rolActual,
+            estado: 'Borrador / En Progreso' // <-- Estado inicial
+        },
+        respuestas_valores: {} 
     };
-    
-    casosEnCache.push(nuevoCaso);
-    localStorage.setItem('casosSalvia', JSON.stringify(casosEnCache));
 
-    inyectarFilaTabla(nuevoCaso);
-    actualizarMetricas();
+    inputs.forEach(input => {
+        const wrapper = input.closest('div[id^="wrapper_"]');
+        if (wrapper && wrapper.classList.contains('hidden')) return; 
 
-    alert("Registro guardado exitosamente.");
-    e.target.reset();
-    cerrarTeclado();
-    navPublic('home-view');
+        const codigoPregunta = input.id.split('_').slice(1).join('_');
+        if (input.multiple) {
+            const seleccionados = Array.from(input.selectedOptions).map(opt => opt.value);
+            if (seleccionados.length > 0 && seleccionados[0] !== "Seleccione...") {
+                paqueteDatos.respuestas_valores[codigoPregunta] = seleccionados;
+            }
+        } else if (input.value && input.value !== "Seleccione...") {
+            paqueteDatos.respuestas_valores[codigoPregunta] = input.value;
+        }
+    });
+
+    // === NUEVO: GUARDAR EN BANDEJA DE ENTRADA (LocalStorage) ===
+    let historialCasos = JSON.parse(localStorage.getItem('salvia_casos') || '[]');
+    historialCasos.push(paqueteDatos);
+    localStorage.setItem('salvia_casos', JSON.stringify(historialCasos));
+    // ==========================================================
+
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(paqueteDatos, null, 4));
+    const botonDescargaOculto = document.createElement('a');
+    botonDescargaOculto.setAttribute("href", dataStr);
+    botonDescargaOculto.setAttribute("download", `SALVIA_${idCaso}.json`);
+    document.body.appendChild(botonDescargaOculto); 
+    botonDescargaOculto.click();
+    botonDescargaOculto.remove();
+
+    alert(`¡Datos guardados!\n\nEl caso ${idCaso} se ha guardado en la Bandeja de Seguimiento para ser retomado más tarde.`);
 }
 
 function inyectarFilaTabla(caso) {
@@ -248,6 +259,14 @@ function switchDashView(viewId) {
     else if(viewId === 'masp' || viewId === 'lgbtiq') vistaActualGlobal = 'Dashboard - Módulo MASP / LGBTIQ+';
     else if(viewId === 'builder') vistaActualGlobal = 'Dashboard - Constructor Dinámico';
     else if(viewId === 'arquitectura') vistaActualGlobal = 'Dashboard - Arquitectura EAV'; // Nueva vista
+    
+    if(viewId === 'dashboard') vistaActualGlobal = 'Dashboard - Panel de Control';
+    else if(viewId === 'seguimiento') {
+        vistaActualGlobal = 'Dashboard - Bandeja de Seguimiento';
+        // ---> NUEVA LÍNEA: Actualizar la tabla al entrar a la vista <---
+        cargarBandejaSeguimiento(); 
+    }
+    else if(viewId === 'tamizaje') vistaActualGlobal = 'Dashboard - Tamizaje de Riesgo';
     
     // Update the Mermaid initialization:
     setTimeout(() => {
@@ -439,7 +458,7 @@ const userStories = {
         role: 'Equipo Desarrollador', 
         content: `
             <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 mt-2">
-                <h4 class="font-bold text-[#B53D75] mb-3">Versión 4 (16/3/2026)</h4>
+                <h4 class="font-bold text-[#B53D75] mb-3">Versión 4.1 (16/3/2026)</h4>
                 <ul class="space-y-3">
                     <li class="flex items-start">
                         <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">1</span> 
@@ -474,8 +493,12 @@ const userStories = {
                         <span>Arquitectura por medio de EAV (Entity-Attribute-Value)</span>
                     </li>
                     <li class="flex items-start">
-                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">7</span> 
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">8</span> 
                         <span>Simulador KOBO</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-[#B53D75] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 shrink-0 mt-0.5">9</span> 
+                        <span>Un JSON que se guarda como pequeña DB para recargar los datos</span>
                     </li>
                 </ul>
             </div>
@@ -1041,8 +1064,131 @@ function evaluarDAG(containerId) {
     });
 }
 
+// ==========================================
+// MÓDULO DE IMPORTACIÓN DE SIMULACIONES
+// ==========================================
+
+function cargarJSONSimulacion(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const datosParseados = JSON.parse(e.target.result);
+            procesarDatosRestauracion(datosParseados);
+        } catch (error) {
+            alert("Error: El archivo seleccionado no es un JSON válido.");
+        }
+    };
+    // Leemos el archivo localmente sin necesidad de servidores
+    reader.readAsText(file);
+}
+
+function procesarDatosRestauracion(paquete) {
+    // 1. Validación de seguridad (¿Es un archivo de nuestro sistema?)
+    if (!paquete.metadata || !paquete.respuestas_valores) {
+        alert("El archivo JSON no tiene la estructura EAV de SALVIA.");
+        return;
+    }
+
+    // === EL AJUSTE CLAVE: SALIR DEL DASHBOARD ===
+    const dashboardApp = document.getElementById('dashboard-app');
+    const publicApp = document.getElementById('public-app');
+    if (dashboardApp) dashboardApp.classList.add('hidden-view');
+    if (publicApp) publicApp.classList.remove('hidden-view');
+    // ============================================
+
+    // 2. Preparar el entorno (Navegar a la vista y cargar el rol correcto)
+    const rol = paquete.metadata.rol_usuario || 'tercero';
+    navPublic('reporte-view'); 
+    prepararFormulario(rol);
+
+    // 3. Pequeña pausa de 100ms para asegurar que el DOM del formulario HTML esté listo
+    setTimeout(() => {
+        const containerId = 'eav-public-container';
+        const respuestas = paquete.respuestas_valores;
+
+        // 4. Inyectar los valores EAV directamente en el HTML
+        for (const [codigo, valor] of Object.entries(respuestas)) {
+            const input = document.getElementById(`${containerId}_${codigo}`);
+            if (input) {
+                if (input.multiple && Array.isArray(valor)) {
+                    // Magia para Multiselect (Barreras): Iluminamos todas las opciones guardadas
+                    Array.from(input.options).forEach(opt => {
+                        if (valor.includes(opt.value)) opt.selected = true;
+                    });
+                } else {
+                    // Magia para Inputs normales y Fechas
+                    input.value = valor;
+                }
+            }
+        }
+
+        // 5. LA MAGIA DEL GRAFO (DAG): 
+        // Le decimos al motor que recalcule la visibilidad usando los datos que acabamos de inyectar
+        evaluarDAG(containerId);
+        // renderizarFormularioDinamico(containerId); (ELEIMINARLA)
+
+        alert(`¡Simulación restaurada con éxito!\n\nID: ${paquete.metadata.id_simulacion}\nSe ha cargado el formulario completo con sus ramificaciones dinámicas.`);
+        
+        // Limpiamos el input file para permitir subir el mismo archivo otra vez si se desea
+        document.getElementById('file-upload-simulacion').value = '';
+    }, 100);
+}
+
 function agregarCampoPrueba() {
     alert("¡El DAG ya está operativo! Modifique el archivo salvia_esquema.js para agregar nuevos nodos al árbol.");
+}
+
+// ==========================================
+// MÓDULO DE BANDEJA DE SEGUIMIENTO (Borradores)
+// ==========================================
+
+function cargarBandejaSeguimiento() {
+    const tbody = document.getElementById('tabla-seguimiento');
+    if (!tbody) return;
+
+    // Leer la base de datos simulada
+    let historialCasos = JSON.parse(localStorage.getItem('salvia_casos') || '[]');
+    
+    if (historialCasos.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-slate-500"><i class="fa-solid fa-folder-open text-3xl mb-3 block text-slate-300"></i>No hay casos en progreso. Llena un formulario Kobo y guárdalo para que aparezca aquí.</td></tr>`;
+        return;
+    }
+
+    // Dibujar las filas dinámicamente
+    tbody.innerHTML = historialCasos.reverse().map(caso => {
+        // Intentamos sacar el ID de la víctima, si no lo llenó, mostramos "Dato faltante"
+        const idVictima = caso.respuestas_valores['K1_003'] || caso.respuestas_valores['G1_006'] || '<span class="text-red-400 italic">Dato faltante</span>';
+        
+        return `
+        <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
+            <td class="px-6 py-4 font-mono text-xs font-bold text-indigo-600">${caso.metadata.id_simulacion}</td>
+            <td class="px-6 py-4 font-medium text-sm text-slate-700">Doc: ${idVictima}</td>
+            <td class="px-6 py-4">
+                <span class="px-2 py-1 rounded bg-yellow-100 text-yellow-800 text-xs font-bold border border-yellow-200"><i class="fa-solid fa-pen-to-square mr-1"></i> Borrador</span>
+            </td>
+            <td class="px-6 py-4 text-xs text-slate-500">${caso.metadata.fecha_humana}</td>
+            <td class="px-6 py-4">
+                <button onclick="retomarCaso('${caso.metadata.id_simulacion}')" class="bg-[#B53D75] text-white px-4 py-2 rounded-lg shadow-sm hover:bg-[#8e2d5a] text-xs font-bold flex items-center transition-colors">
+                    <i class="fa-solid fa-folder-open mr-2"></i> Retomar
+                </button>
+            </td>
+        </tr>
+        `
+    }).join('');
+}
+
+function retomarCaso(idCaso) {
+    // Buscar el caso en la memoria
+    let historialCasos = JSON.parse(localStorage.getItem('salvia_casos') || '[]');
+    const casoEncontrado = historialCasos.find(c => c.metadata.id_simulacion === idCaso);
+    
+    if (casoEncontrado) {
+        // Reutilizamos tu magistral función de restauración
+        procesarDatosRestauracion(casoEncontrado);
+    }
 }
 
 // ==========================================

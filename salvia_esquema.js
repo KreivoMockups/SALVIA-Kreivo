@@ -100,7 +100,7 @@ const dicPreguntas = {
     "K1_012": { label: "¿Acudió al Sector salud?", type: "boolean", colSpan: 4 },
     "K2_012A": { label: "¿A que institución acudió?", type: "multiselect", options: ["Consultorio médico","EPS","Hospital Privado","Hospital Público","IPS","Puesto de Salud","No sabe / No Responde"], colSpan: 4 },
     "K2_012B": { label: "Estado del proceso de activación", type: "select", options: ["Seleccione...", "Iniciado", "En Proceso", "Finalizado", "Denegado"], colSpan: 4 },
-    "K1_013": { label: "¿Acudió al Sector salud?", type: "boolean", colSpan: 4 },
+    "K1_013": { label: "¿Acudió al Sector justicia?", type: "boolean", colSpan: 4 },
     "K2_013A": { label: "¿A que institución acudió?", type: "multiselect", options: ["CAI-Policía (Comando de Atención Inmediata)", "CAIVAS (Centro de Atención Integral a Víctimas de Violencia Sexual)","Casas de Justicia","CAVIV (Centro de Atención Integral contra la Violencia Intrafamiliar)","Comisaría de Familia", "Estación de Policía", "Fiscalía General de la Nación", "Inspección de Policía", "Instituto Nacional de Medicina Legal", "Jueces Civiles o Promiscuos Municipales", "Jueces de Control de Garantías o Jueces Penales", "Policía Judicial", "Unidad de reacción inmediata", "No sabe / No Responde"], colSpan: 4 },
     "K2_013B": { label: "Estado del proceso de activación", type: "select", options: ["Seleccione...", "Iniciado", "En Proceso", "Finalizado", "Denegado"], colSpan: 4 },
     "K1_014": { label: "¿Acudió al Sector protección?", type: "boolean", colSpan: 4 },

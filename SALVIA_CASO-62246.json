@@ -1,0 +1,45 @@
+{
+    "metadata": {
+        "id_simulacion": "CASO-62246",
+        "fecha_registro": "2026-03-17T06:10:48.603Z",
+        "fecha_humana": "17/3/2026, 1:10:48 a.m.",
+        "rol_usuario": "kobo",
+        "estado": "Borrador / En Progreso"
+    },
+    "respuestas_valores": {
+        "K1_001": [
+            "Barreras"
+        ],
+        "K1_002": "2026-03-12T07:09",
+        "K1_003": "41227669",
+        "K1_003_A": "Registro Civil",
+        "K1_003_B": "Mujer",
+        "K1_004": "Alto",
+        "K1_005": "Notificación SALVIA",
+        "K1_006": "Andres Posada",
+        "K1_007": "Llamada No Efectiva - No hay comunicación",
+        "K1_008": "7",
+        "K1_009": "Contacto indirecto - Familiar o persona conocida",
+        "K1_010": "false",
+        "K1_011": "true",
+        "K2_011": [
+            "Ruta personas con discapacidad"
+        ],
+        "K1_012": "true",
+        "K2_012A": [
+            "Hospital Público"
+        ],
+        "K2_012B": "Finalizado",
+        "K1_013": "true",
+        "K2_013A": [
+            "Casas de Justicia",
+            "Comisaría de Familia"
+        ],
+        "K2_013B": "Iniciado",
+        "K1_039": "true",
+        "K2_039_A": "Sí. Se hizo registro y requiere seguimiento en 4 horas",
+        "K2_039_B": "2026-03-17T01:10",
+        "K2_039_C": "Agente integral",
+        "K2_039_D": "Jorge Bejarano"
+    }
+}

@@ -1,0 +1,103 @@
+{
+    "metadata": {
+        "id_simulacion": "CASO-35941",
+        "fecha_registro": "2026-03-17T05:53:14.521Z",
+        "rol_usuario": "kobo"
+    },
+    "respuestas_valores": {
+        "K1_001": [
+            "Seguimiento a Barreras"
+        ],
+        "K1_002": "2026-03-12T17:44",
+        "K1_003": "52338642",
+        "K1_003_A": "Cédula De Ciudadanía",
+        "K1_003_B": "Mujer",
+        "K1_004": "Moderado",
+        "K1_005": "Seguimiento General",
+        "K1_006": "Andres Posada",
+        "K1_007": "Llamada Efectiva - Se logra comunicación",
+        "K1_008": "4",
+        "K1_009": "Contacto con la víctima",
+        "K1_010": "true",
+        "K2_010_A": "Reoprta nuevo evento de violencia física propinado por su pareja sentimental",
+        "K1_011": "true",
+        "K2_011": [
+            "Ruta Mujeres Indigenas",
+            "Ruta personas con discapacidad"
+        ],
+        "K1_012": "false",
+        "K1_013": "true",
+        "K2_013A": [
+            "CAI-Policía (Comando de Atención Inmediata)",
+            "Estación de Policía",
+            "Inspección de Policía"
+        ],
+        "K2_013B": "En Proceso",
+        "K1_014": "false",
+        "K1_015": "false",
+        "K1_016": "true",
+        "K2_016A": [
+            "Institución de Educación Preescolar"
+        ],
+        "K2_016B": "Iniciado",
+        "K1_017": "false",
+        "K1_018": "true",
+        "K2_018A": [
+            "Secretaría de la Mujer"
+        ],
+        "K2_018B": "Denegado",
+        "K1_019": "false",
+        "K1_020": "false",
+        "K1_020C": "true",
+        "K1_021": [
+            "Atención en salud no centrada en cosmovisiones y prácticas culturales propias",
+            "Negativa en el acceso a la IVE"
+        ],
+        "K1_022": [
+            "No Aplica"
+        ],
+        "K1_023": [
+            "Demora o ausencia en la activación de medidas",
+            "Demoras en la emisión de medidas urgentes"
+        ],
+        "K1_024": [
+            "Falta de formación y perspectiva de género",
+            "Falta de interoperabilidad"
+        ],
+        "K1_025": [
+            "Falta de autonomía económica"
+        ],
+        "K1_026": [
+            "Estereotipos y tolerancia social a la violencia"
+        ],
+        "K1_027": [
+            "Lejanía física de las instituciones",
+            "Infraestructura y conectividad insuficiente"
+        ],
+        "K1_028": [
+            "No Aplica"
+        ],
+        "K1_029": "2026-02-25",
+        "K1_030": [
+            "Colegios"
+        ],
+        "K1_031": "Brayan Marbello",
+        "K1_032": "Indicó que no era la instancia para reportar el caso y que debía llamar al 123",
+        "K1_033": [
+            "Escalamiento a organismo de control"
+        ],
+        "K1_034": "Desde la estación se reporta el caso al 155 y se genera el caso",
+        "K1_035": "Se recibe el caso y se identifica que la mujer presenta una dependencia económica y social frente a su pareja",
+        "K1_036": "dar apoyo económico y de seguimiento ",
+        "K1_037": "true",
+        "K2_037_A": "Aumentan las señales porque la pareja la controla ahora mucho mas",
+        "K1_038": "true",
+        "K2_038_A": "Atención Psicosocial",
+        "K2_038_B": "N/A",
+        "K1_039": "true",
+        "K2_039_A": "Sí. Se hizo registro y requiere seguimiento en 4 horas",
+        "K2_039_B": "2026-03-17T12:51",
+        "K2_039_C": "Seguimiento general",
+        "K2_039_D": "Johnny Sierra"
+    }
+}
