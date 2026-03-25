@@ -180,11 +180,20 @@ const arbolRelaciones = {
         "S_006", "V1_014", "V1_015", "H1_001", "H1_002", "H1_003", "H1_004"
     ],
 
+
     // 2. RAÍCES PARA EL TERCERO / FAMILIAR (Solo Sección 1 y Descripción general)
     "raices_tercero": [
         "S_004", "G1_001", "G1_002", "G1_003", "G1_004", "G1_005", "G1_006", "G1_007", "G1_008", "G1_009", "G1_010", "G1_011", "G1_012",
         "S_006", "H1_001" 
     ],
+
+    // ---> NUEVO: RAÍCES PARA EL AUTO-REPORTE DEL AGRESOR <---
+    // (Por ahora es un clon del tercero, pero ya tiene independencia arquitectónica)
+    "raices_agresor": [
+        "S_004", "G1_001", "G1_002", "G1_003", "G1_004", "G1_005", "G1_006", "G1_007", "G1_008", "G1_009", "G1_010", "G1_011", "G1_012",
+        "S_006", "H1_001" 
+    ],
+
 
     // 3. RAÍCES PARA EL FUNCIONARIO (Todo el formulario completo)
     "raices_funcionario": [
