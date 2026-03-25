@@ -179,12 +179,13 @@
 
                 </div>
             </section>
-            <section id="reporte-view" class="hidden-view flex-grow container mx-auto px-4 py-8 max-w-4xl">
+            
+            <section id="reporte-view" class="hidden-view flex-grow container mx-auto px-4 py-8 max-w-4xl pb-32">
                 <button onclick="navPublic('home-view')" class="mb-6 text-[#380E44] font-bold flex items-center hover:underline">
                     <i class="fa-solid fa-arrow-left mr-2"></i> Volver al inicio
                 </button>
                 
-                <div class="bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-100 pb-8">
+                <div class="bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-100 pb-8 mb-12">
                     <div class="bg-[#380E44] text-white px-6 py-5 flex justify-between items-center mb-4">
                         <div>
                             <h1 id="form-dynamic-title" class="text-2xl font-bold">Registro de Contacto indirecto</h1>
@@ -193,6 +194,26 @@
                     </div>
                     
                     <div class="px-6 md:px-8">
+                        
+                        <div class="flex flex-col sm:flex-row justify-between items-center bg-purple-50 p-4 rounded-xl border border-purple-200 mb-6 gap-4 shadow-sm">
+                            <div class="flex items-center text-[#380E44] text-sm font-bold">
+                                <i class="fa-solid fa-file-export mr-3 text-xl text-[#B53D75]"></i> 
+                                <div>
+                                    <span class="block">Simulación de Interoperabilidad</span>
+                                    <span class="text-xs font-normal text-purple-700">Transfiere datos entre roles usando archivos locales</span>
+                                </div>
+                            </div>
+                            <div class="flex space-x-3 w-full sm:w-auto">
+                                <label class="flex-1 sm:flex-none cursor-pointer bg-white text-[#B53D75] px-4 py-2 rounded-lg border-2 border-[#B53D75] shadow-sm hover:bg-pink-50 transition-colors text-sm font-bold flex items-center justify-center">
+                                    <i class="fa-solid fa-upload mr-2"></i> Cargar JSON
+                                    <input type="file" class="hidden" accept=".json" onchange="cargarFormularioJSON(event)">
+                                </label>
+                                <button type="button" onclick="exportarFormularioJSON()" class="flex-1 sm:flex-none bg-[#B53D75] text-white px-4 py-2 rounded-lg shadow-sm hover:bg-[#8e2d5a] transition-colors text-sm font-bold flex items-center justify-center border-2 border-[#B53D75]">
+                                    <i class="fa-solid fa-download mr-2"></i> Guardar
+                                </button>
+                            </div>
+                        </div>
+
                         <p id="form-dynamic-instruction" class="text-sm text-gray-800 mb-6 bg-blue-50 p-4 rounded-lg border-l-4 border-[#3366CC]" tabindex="0">
                             <strong>Orientación:</strong> Por favor complete la información. El campo de teléfono es obligatorio.
                         </p>
@@ -226,12 +247,15 @@
 
                             <div class="pt-6 flex justify-center">
                                 <button type="submit" class="client-btn-success w-full sm:w-auto text-lg py-3 px-12">
-                                    Enviar reporte
+                                    Finalizar y Enviar
                                 </button>
                             </div>
                         </form>
                     </div>
                 </div>
+
+                <div class="h-40 w-full shrink-0"></div>
+
             </section>
 
             <section id="login-view" class="hidden-view flex-grow flex items-center justify-center p-4">
