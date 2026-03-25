@@ -1,16 +1,116 @@
-/* =====================================================================
-   SALVIA V4.0 - ESTILOS DE DIAGRAMA INTERACTIVO (FLOWCHART)
-   ===================================================================== */
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 body { 
     font-family: 'Inter', sans-serif; 
 }
 
-/* ---------------------------------------------------------------------
-   1. NODOS DEL DIAGRAMA (Botones Principales)
-   --------------------------------------------------------------------- */
+/* =====================================================================
+   1. ESTILOS BASE Y PORTAL PÚBLICO (Versiones Anteriores)
+   ===================================================================== */
+.hidden-view { 
+    display: none !important; 
+}
+
+.tooltip-text { 
+    visibility: hidden; 
+    opacity: 0; 
+    transition: opacity 0.3s; 
+}
+
+.group:hover .tooltip-text { 
+    visibility: visible; 
+    opacity: 1; 
+}
+
+#virtual-keypad { 
+    transform: translateY(100%); 
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+}
+
+#virtual-keypad.show { 
+    transform: translateY(0); 
+}
+
+.bg-pattern { 
+    background-image: radial-gradient(#26a69a 1px, transparent 1px); 
+    background-size: 20px 20px; 
+    background-color: #f8f9fa; 
+}
+
+/* =====================================================================
+   2. ESTILOS DE DASHBOARD ORIGINALES
+   ===================================================================== */
+.bg-dashboard-bg { background-color: #f8fafc; }
+.bg-salvia-dash-purple { background-color: #6d28d9; }
+.bg-salvia-dash-yellow { background-color: #f59e0b; }
+.bg-salvia-dash-cyan { background-color: #06b6d4; }
+.bg-salvia-dash-red { background-color: #ef4444; }
+.sidebar-active { 
+    background-color: rgba(255, 255, 255, 0.1); 
+    border-left: 4px solid #a855f7; 
+}
+
+/* =====================================================================
+   3. ESTILOS DE FORMULARIOS EAV (Para que el Modal se vea perfecto)
+   ===================================================================== */
+.client-section-header {
+    background-color: #f4f1f9;
+    color: #4a235a;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    margin-top: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.client-section-header h2 {
+    font-size: 1.25rem;
+    font-weight: 500;
+    letter-spacing: 0.025em;
+    margin: 0;
+}
+
+.client-section-header i {
+    margin-right: 0.75rem;
+    font-size: 1.25rem;
+    width: 1.5rem;
+    text-align: center;
+}
+
+/* Etiquetas (Labels) Grises */
+.client-input-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #4b5563; /* text-gray-600 */
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+}
+
+/* Cajas de Texto y Selects */
+.client-input-field {
+    width: 100%;
+    border: 1px solid #d1d5db; /* border-gray-300 */
+    border-radius: 0.375rem; /* rounded-md */
+    padding: 0.5rem;
+    font-size: 0.875rem;
+    color: #1f2937;
+    background-color: #ffffff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.client-input-field:focus {
+    outline: none;
+    border-color: #a855f7; /* purple-500 */
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2);
+}
+
+/* =====================================================================
+   4. SALVIA V4.0 - ESTILOS DE DIAGRAMA INTERACTIVO (FLOWCHART)
+   ===================================================================== */
+
+/* Nodos del Diagrama (Botones Principales) */
 .flow-node {
     display: flex;
     flex-direction: column;
@@ -18,7 +118,7 @@ body {
     justify-content: center;
     padding: 1.5rem;
     background-color: #ffffff;
-    border: 2px solid #e2e8f0; /* Color gris suave */
+    border: 2px solid #e2e8f0; 
     border-radius: 1rem;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -29,31 +129,26 @@ body {
     min-height: 140px;
 }
 
-/* Efecto de elevación e iluminación al pasar el mouse */
 .flow-node:hover {
     transform: translateY(-5px);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    border-color: #a855f7; /* Borde morado al hacer hover */
+    border-color: #a855f7; 
 }
 
-/* Excepciones de color de borde en hover según el módulo */
 .flow-node.border-indigo-200:hover { border-color: #6366f1; }
 .flow-node.border-yellow-300:hover { border-color: #eab308; }
 .flow-node.border-pink-200:hover { border-color: #ec4899; }
 
-/* Icono dentro del nodo */
 .node-icon {
     font-size: 2.5rem;
     margin-bottom: 1rem;
     transition: transform 0.3s ease;
 }
 
-/* Pequeño salto del icono al hacer hover */
 .flow-node:hover .node-icon {
     transform: scale(1.15);
 }
 
-/* Etiqueta principal del nodo */
 .node-label {
     font-weight: 700;
     font-size: 0.875rem;
@@ -62,7 +157,6 @@ body {
     line-height: 1.2;
 }
 
-/* Estado del nodo (Ej: "Listo", "Fase III") */
 .node-status {
     font-size: 0.65rem;
     font-weight: 700;
@@ -76,9 +170,7 @@ body {
     align-items: center;
 }
 
-/* ---------------------------------------------------------------------
-   2. REPOSITORIOS (Bandejas de Seguimiento)
-   --------------------------------------------------------------------- */
+/* Repositorios (Bandejas de Seguimiento) */
 .flow-repo {
     display: flex;
     align-items: center;
@@ -96,7 +188,7 @@ body {
 
 .flow-repo:hover {
     transform: scale(1.03);
-    border-color: #0d9488; /* Borde Teal */
+    border-color: #0d9488; 
     box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.15);
 }
 
@@ -129,10 +221,7 @@ body {
     display: inline-block;
 }
 
-/* ---------------------------------------------------------------------
-   3. ANIMACIONES Y UTILIDADES VISUALES
-   --------------------------------------------------------------------- */
-/* Animación lenta para las flechas de conexión del diagrama */
+/* Animaciones y Utilidades Visuales */
 @keyframes bounce-slow {
     0%, 100% {
         transform: translateY(-15%);
@@ -148,7 +237,6 @@ body {
     animation: bounce-slow 2.5s infinite;
 }
 
-/* Transiciones suaves para los bloques de texto de la izquierda */
 .text-block {
     transition: opacity 0.4s ease, transform 0.4s ease;
 }
@@ -159,10 +247,7 @@ body {
     padding-left: 1rem;
 }
 
-/* ---------------------------------------------------------------------
-   4. BARRAS DE DESPLAZAMIENTO ESTILIZADAS (Scrollbars)
-   --------------------------------------------------------------------- */
-/* Hace que el diagrama se vea más limpio al hacer scroll */
+/* Barras de Desplazamiento Estilizadas (Scrollbars) */
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -181,7 +266,6 @@ body {
     background: #94a3b8;
 }
 
-/* Ajustes específicos para el modal de los formularios */
 #eav-form-container {
     scroll-behavior: smooth;
 }
