@@ -1191,6 +1191,228 @@ function retomarCaso(idCaso) {
     }
 }
 
+// =====================================================================
+// MÓDULO V4.0: NAVEGACIÓN DE DIAGRAMA INTERACTIVO Y TAMIZAJE
+// =====================================================================
+
+// 1. CONTROLADOR PRINCIPAL DEL DIAGRAMA
+function abrirModulo(moduloId) {
+    const modal = document.getElementById('salvia-modal');
+    const title = document.getElementById('modal-title');
+    const container = document.getElementById('eav-form-container');
+    const btnSubmit = document.getElementById('modal-submit-btn');
+
+    // Limpiamos el contenedor
+    container.innerHTML = '';
+    btnSubmit.style.display = 'block';
+
+    // Iluminar el texto explicativo de la izquierda
+    sincronizarTextoExplicativo(moduloId);
+
+    // LÓGICA DE RUTEO SEGÚN EL BOTÓN PRESIONADO
+    if (moduloId === 'victima' || moduloId === 'tercero' || moduloId === 'agresor') {
+        // FORMULARIOS DE REGISTRO
+        title.innerHTML = `<i class="fa-solid fa-address-card text-purple-600 mr-2"></i> Registro Inicial: ${moduloId.toUpperCase()}`;
+        rolActual = moduloId; 
+        
+        // Aquí conectamos con tu motor EAV existente
+        // Nota: Asegúrate de tener "raices_agresor" en tu salvia_esquema.js, si no, usa una existente para la demo
+        let raizCargar = 'raices_' + moduloId;
+        if (!arbolRelaciones[raizCargar]) raizCargar = 'raices_tercero'; // Fallback de seguridad
+        
+        // Re-mapeamos temporalmente la función de renderizado para usar este contenedor y esta raíz
+        renderizarEAVPersonalizado(container.id, raizCargar);
+
+    } else if (moduloId === 'funcionario') {
+        title.innerHTML = `<i class="fa-solid fa-headset text-indigo-600 mr-2"></i> Atención Línea 155`;
+        rolActual = 'funcionario';
+        renderizarEAVPersonalizado(container.id, 'raices_funcionario');
+
+    } else if (moduloId === 'kobo') {
+        title.innerHTML = `<i class="fa-solid fa-list-check text-pink-600 mr-2"></i> Formulario Kobo (Generación de Caso)`;
+        rolActual = 'kobo';
+        // Simulamos traer datos previos
+        precargarDatosCasoKobo(); 
+        renderizarEAVPersonalizado(container.id, 'raices_kobo');
+
+    } else if (moduloId === 'tamizaje') {
+        // TAMIZAJE DE RIESGO (Calculadora Custom)
+        title.innerHTML = `<i class="fa-solid fa-calculator text-yellow-600 mr-2"></i> Valoración de Riesgo`;
+        renderizarTamizajeCustom(container);
+        btnSubmit.innerText = "Guardar Puntuación";
+
+    } else if (moduloId.startsWith('repo-')) {
+        // REPOSITORIOS DE SEGUIMIENTO (Bandejas)
+        const area = moduloId.split('-')[1].toUpperCase();
+        title.innerHTML = `<i class="fa-solid fa-folder-tree text-teal-600 mr-2"></i> Repositorio de Asignación: ${area}`;
+        btnSubmit.style.display = 'none'; // No hay botón de guardar en la bandeja
+        cargarRepositorio(container, area);
+    }
+
+    // Finalmente, mostramos el modal con animación
+    modal.classList.remove('hidden');
+}
+
+function cerrarModulo() {
+    document.getElementById('salvia-modal').classList.add('hidden');
+}
+
+// 2. SINCRONIZADOR DE TEXTO (El 1/3 de la pantalla)
+function sincronizarTextoExplicativo(moduloId) {
+    // Apagar todos los textos
+    document.querySelectorAll('.text-block').forEach(el => {
+        el.classList.remove('active-text', 'opacity-100');
+        el.classList.add('opacity-40');
+    });
+
+    // Definir qué sección encender según el botón
+    let seccionId = '';
+    if (['victima', 'tercero', 'agresor'].includes(moduloId)) seccionId = 'registro';
+    else if (['funcionario', 'tamizaje'].includes(moduloId)) seccionId = 'funcionario';
+    else if (moduloId === 'kobo') seccionId = 'kobo';
+    else if (moduloId.startsWith('repo-')) seccionId = 'seguimiento';
+
+    // Encender el texto correcto
+    const activa = document.getElementById(`text-section-${seccionId}`);
+    if (activa) {
+        activa.classList.remove('opacity-40');
+        activa.classList.add('active-text', 'opacity-100', 'transition-all', 'duration-500');
+    }
+}
+
+// 3. MOTOR DEL TAMIZAJE DE RIESGO
+function renderizarTamizajeCustom(container) {
+    // Generamos una interfaz rápida de 20 preguntas booleanas simuladas para la demostración
+    let htmlPreguntas = '';
+    for (let i = 1; i <= 20; i++) {
+        htmlPreguntas += `
+            <div class="p-3 bg-white border border-gray-200 rounded-lg flex justify-between items-center hover:bg-yellow-50 transition-colors">
+                <span class="text-sm text-gray-700 font-medium">${i}. Indicador de riesgo psicosocial / físico #${i}</span>
+                <div class="flex gap-4">
+                    <label class="flex items-center gap-1 cursor-pointer text-sm">
+                        <input type="radio" name="tam_${i}" value="1" onchange="calcularTamizaje()" class="w-4 h-4 text-yellow-600"> Sí
+                    </label>
+                    <label class="flex items-center gap-1 cursor-pointer text-sm">
+                        <input type="radio" name="tam_${i}" value="0" onchange="calcularTamizaje()" class="w-4 h-4 text-gray-400" checked> No
+                    </label>
+                </div>
+            </div>
+        `;
+    }
+
+    container.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="space-y-3 h-[50vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-yellow-300">
+                <p class="text-sm text-gray-500 mb-4">Responda las 20 preguntas del protocolo estándar. El sistema calculará el riesgo en tiempo real.</p>
+                ${htmlPreguntas}
+            </div>
+            <div class="flex flex-col items-center justify-center bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 p-8">
+                <h4 class="font-bold text-gray-400 mb-4 uppercase tracking-widest text-xs">Puntaje Automatizado</h4>
+                <div id="risk-score" class="text-8xl font-black text-slate-800 transition-colors">0</div>
+                <div id="risk-badge" class="mt-6 px-6 py-2 rounded-full font-bold text-sm bg-slate-200 text-slate-600 shadow-sm transition-all">SIN RIESGO EVIDENTE</div>
+                
+                <div class="mt-8 w-full text-xs text-gray-500 bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                    <ul class="space-y-2">
+                        <li><span class="inline-block w-3 h-3 bg-red-500 rounded-full mr-2"></span>> 15 ptos: Riesgo Extremo (Max 4h)</li>
+                        <li><span class="inline-block w-3 h-3 bg-orange-500 rounded-full mr-2"></span>11 a 15 ptos: Riesgo Alto (Max 24h)</li>
+                        <li><span class="inline-block w-3 h-3 bg-yellow-400 rounded-full mr-2"></span>5 a 10 ptos: Riesgo Moderado (Max 72h)</li>
+                        <li><span class="inline-block w-3 h-3 bg-green-500 rounded-full mr-2"></span>1 a 4 ptos: Riesgo Bajo</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// 4. LÓGICA DE PUNTUACIÓN (Los rangos que solicitaste)
+function calcularTamizaje() {
+    let puntos = 0;
+    // Sumamos todos los radio buttons marcados con valor "1"
+    document.querySelectorAll('input[type="radio"]:checked').forEach(input => {
+        puntos += parseInt(input.value);
+    });
+
+    const scoreDisplay = document.getElementById('risk-score');
+    const badgeDisplay = document.getElementById('risk-badge');
+
+    scoreDisplay.innerText = puntos;
+    
+    // Semaforización y Rangos
+    if (puntos > 15) {
+        badgeDisplay.innerText = "RIESGO EXTREMO / INMINENTE";
+        badgeDisplay.className = "mt-6 px-6 py-2 rounded-full font-bold text-sm shadow-sm transition-all bg-red-100 text-red-800 border border-red-300 animate-pulse";
+        scoreDisplay.className = "text-8xl font-black text-red-600 transition-colors";
+    } else if (puntos >= 11) {
+        badgeDisplay.innerText = "RIESGO ALTO";
+        badgeDisplay.className = "mt-6 px-6 py-2 rounded-full font-bold text-sm shadow-sm transition-all bg-orange-100 text-orange-800 border border-orange-300";
+        scoreDisplay.className = "text-8xl font-black text-orange-500 transition-colors";
+    } else if (puntos >= 5) {
+        badgeDisplay.innerText = "RIESGO MODERADO";
+        badgeDisplay.className = "mt-6 px-6 py-2 rounded-full font-bold text-sm shadow-sm transition-all bg-yellow-100 text-yellow-800 border border-yellow-300";
+        scoreDisplay.className = "text-8xl font-black text-yellow-500 transition-colors";
+    } else if (puntos >= 1) {
+        badgeDisplay.innerText = "RIESGO BAJO";
+        badgeDisplay.className = "mt-6 px-6 py-2 rounded-full font-bold text-sm shadow-sm transition-all bg-green-100 text-green-800 border border-green-300";
+        scoreDisplay.className = "text-8xl font-black text-green-500 transition-colors";
+    } else {
+        badgeDisplay.innerText = "SIN RIESGO EVIDENTE";
+        badgeDisplay.className = "mt-6 px-6 py-2 rounded-full font-bold text-sm shadow-sm transition-all bg-slate-200 text-slate-600";
+        scoreDisplay.className = "text-8xl font-black text-slate-800 transition-colors";
+    }
+}
+
+// 5. FUNCIONES AUXILIARES PARA EL FLUJO
+function renderizarEAVPersonalizado(containerId, raizPrincipal) {
+    // Usamos el DAG, solo que inyectamos los elementos en el contenedor del Modal
+    renderizarFormularioDinamico(containerId); // Tu función existente que dibuja inputs
+    // En un futuro próximo podemos ajustar el 'renderizarFormularioDinamico' 
+    // para que solo pinte los campos específicos de "raizPrincipal".
+}
+
+function precargarDatosCasoKobo() {
+    console.log("Simulando extracción de datos de la base EAV previa...");
+    // Esta función permite que cuando se abra KOBO, busque en LocalStorage
+    // el caso anterior y pre-llene "ID de Víctima", "Tipo Documento", etc.
+}
+
+function cargarRepositorio(container, area) {
+    // Simulador visual rápido para la bandeja de entrada de un área específica
+    container.innerHTML = `
+        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-gray-50 text-gray-600 font-bold border-b border-gray-200">
+                    <tr>
+                        <th class="p-4">ID Caso</th>
+                        <th class="p-4">Riesgo</th>
+                        <th class="p-4">Tiempo Límite</th>
+                        <th class="p-4">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    <tr class="bg-red-50 hover:bg-red-100 transition-colors">
+                        <td class="p-4 font-mono font-bold text-red-700">CASO-8821</td>
+                        <td class="p-4"><span class="bg-red-600 text-white px-2 py-1 rounded text-xs font-bold">EXTREMO</span></td>
+                        <td class="p-4 font-bold text-red-600"><i class="fa-solid fa-clock mr-1"></i> Quedan 2h 15m</td>
+                        <td class="p-4"><button class="text-indigo-600 font-bold hover:underline">Gestionar >></button></td>
+                    </tr>
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="p-4 font-mono font-bold text-gray-600">CASO-3491</td>
+                        <td class="p-4"><span class="bg-yellow-400 text-yellow-900 px-2 py-1 rounded text-xs font-bold">MODERADO</span></td>
+                        <td class="p-4 text-gray-500"><i class="fa-solid fa-clock mr-1"></i> Quedan 48h</td>
+                        <td class="p-4"><button class="text-indigo-600 font-bold hover:underline">Gestionar >></button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="mt-6 text-xs text-gray-500 bg-blue-50 p-4 rounded-lg border border-blue-100">
+            <i class="fa-solid fa-circle-info text-blue-500 mr-2"></i> 
+            Este repositorio recibe casos automáticamente desde el enrutamiento del Formulario Kobo. 
+            El contador de tiempo límite se reinicia si el estado cambia (Ej: Intentos fallidos de contacto).
+        </div>
+    `;
+}
+
+
 // ==========================================
 // INICIALIZADOR GENERAL
 // ==========================================
