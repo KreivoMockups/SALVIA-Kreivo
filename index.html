@@ -1,181 +1,278 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882">
 <head>
     <meta charset="UTF-8">
-    <title>SALVIA Fase II - Simulador de Flujo Interactivo</title>
-    <link rel="stylesheet" href="salvia_style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SALVIA - Camina Contigo | salvia.minigualdadyequidad.gov.co</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        govco: '#004884',
+                        salvia: {
+                            purple: '#4a148c',
+                            lightPurple: '#7c43bd',
+                            teal: '#26a69a',
+                            bg: '#f8f9fa'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+<link rel="stylesheet" href="salvia_style.css">
 </head>
-<body class="h-screen overflow-hidden bg-gray-50 flex flex-col">
+<body class="overflow-hidden h-screen w-full flex flex-col">
 
-    <header class="h-16 bg-[#380E44] text-white flex items-center justify-between px-6 shrink-0 z-50">
-        <h1 class="text-xl font-bold">SALVIA <span class="text-purple-300">| Simulador de Procesos</span></h1>
-        <div class="flex items-center gap-4">
-            <button onclick="toggleLoadPanel()" class="bg-[#B53D75] px-4 py-1.5 rounded-lg text-sm font-bold hover:bg-magenta-700 transition">
-                <i class="fa-solid fa-file-import mr-2"></i> Importar Caso (JSON)
-            </button>
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center font-bold">OTI</div>
-                <span class="text-xs">Supervisor Kreivo</span>
-            </div>
-        </div>
-    </header>
-
-    <main class="flex-1 flex overflow-y-auto">
-
-        <aside class="w-1/3 bg-white border-r border-gray-100 p-10 space-y-12 sticky top-0 h-fit">
-            
-            <div id="text-section-registro" class="text-block active-text">
-                <div class="inline-block bg-purple-100 text-[#380E44] px-3 py-1 rounded-full font-bold text-xs mb-3">PASO 1</div>
-                <h2 class="text-2xl font-bold text-slate-800 mb-4">Registro Inicial y Captura de DatosBásicos</h2>
-                <p class="text-slate-600 leading-relaxed">En esta fase, el sistema captura la información general de la víctima desde tres fuentes posibles. Es crucial notar que en este punto **aún no se genera un caso operativo**. Solo estamos poblado el repositorio de datos básicos bajo el modelo EAV.</p>
-            </div>
-
-            <div id="text-section-funcionario" class="text-block opacity-40">
-                <div class="inline-block bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full font-bold text-xs mb-3">PASO 2</div>
-                <h2 class="text-2xl font-bold text-slate-800 mb-4">Atención Línea 155 y Valoración de Riesgo</h2>
-                <p class="text-slate-600 leading-relaxed">El funcionario de la Línea 155 retoma la información registrada. El **Tamizaje de Riesgo** es ahora un módulo transversal que calcula automáticamente la puntuación (0-20) y define el nivel de urgencia del enrutamiento.</p>
-            </div>
-
-            <div id="text-section-kobo" class="text-block opacity-40">
-                <div class="inline-block bg-pink-100 text-pink-900 px-3 py-1 rounded-full font-bold text-xs mb-3">PASO 3</div>
-                <h2 class="text-2xl font-bold text-slate-800 mb-4">Creación y Gestión del Caso (Kobo)</h2>
-                <p class="text-slate-600 leading-relaxed">Se consolida la información y el registro se transforma oficialmente en un **Caso**. El formulario Kobo permite traer datos básicos ya capturados para agilizar el proceso y soporta la funcionalidad de "Guardar Borrador" para cambios de turno.</p>
-            </div>
-
-            <div id="text-section-seguimiento" class="text-block opacity-40">
-                <div class="inline-block bg-teal-100 text-teal-900 px-3 py-1 rounded-full font-bold text-xs mb-3">PASO 4</div>
-                <h2 class="text-2xl font-bold text-slate-800 mb-4">Seguimiento, Trazabilidad y Repositorios por Área</h2>
-                <p class="text-slate-600 leading-relaxed">Este es el gran aporte de SALVIA: una bandeja de entrada para cada área con **semaforización de tiempos de atención** basada en el riesgo. Los funcionarios pueden enrutar casos entre áreas, actualizar niveles de riesgo e historizar gestiones (como intentos de llamada fallidos) hasta el cierre del caso.</p>
-            </div>
-
-        </aside>
-
-        <section class="w-2/3 p-12 bg-gray-50 space-y-16">
-
-            <div id="diagram-registro" class="diagram-segment space-y-6">
-                <h4 class="text-xs uppercase text-gray-400 font-bold tracking-wider text-center">Formularios de Registro (No Generan Caso)</h4>
-                <div class="grid grid-cols-3 gap-6 items-center">
-                    
-                    <button onclick="abrirModulo('victima')" class="flow-node group">
-                        <i class="fa-solid fa-person-dress node-icon text-purple-600"></i>
-                        <span class="node-label">Registro Víctima</span>
-                        <div class="node-status"><i class="fa-solid fa-check-circle text-green-500 mr-1"></i> Listo</div>
-                    </button>
-
-                    <button onclick="abrirModulo('tercero')" class="flow-node group">
-                        <i class="fa-solid fa-people-group node-icon text-purple-600"></i>
-                        <span class="node-label">Reporte Tercero</span>
-                        <div class="node-status"><i class="fa-solid fa-check-circle text-green-500 mr-1"></i> Listo</div>
-                    </button>
-
-                    <button onclick="abrirModulo('agresor')" class="flow-node group border-dashed border-gray-300 opacity-60">
-                        <i class="fa-solid fa-person-harassing node-icon text-gray-400 group-hover:text-red-500"></i>
-                        <span class="node-label text-gray-500 group-hover:text-red-700">Auto-reporte Agresor</span>
-                        <div class="node-status text-gray-400">FASE III</div>
-                    </button>
+    <div id="public-app" class="flex flex-col h-full w-full overflow-y-auto bg-salvia-bg">
+        
+        <div class="bg-[#3366CC] text-white sticky top-0 z-50">
+            <div class="container mx-auto px-4 py-2 flex justify-between items-center">
+                <div class="flex items-center">
+                    <img src="assets/img/header_govco.png" alt="GOV.CO" class="h-6 md:h-8 object-contain">
                 </div>
-                <div class="flex justify-center text-gray-300 text-3xl my-4">
-                    <i class="fa-solid fa-arrow-down-long animate-bounce-slow"></i>
+                <div>
+                    <h1>KREIVO - MESAS DE TRABAJO</h1>
                 </div>
-            </div>
-
-            <div id="diagram-funcionario" class="diagram-segment flex flex-col items-center gap-6">
-                <h4 class="text-xs uppercase text-gray-400 font-bold tracking-wider text-center">Atención Línea 155</h4>
-                <div class="flex items-center gap-10">
-                    <button onclick="abrirModulo('funcionario')" class="flow-node group border-indigo-200 bg-indigo-50/50">
-                        <i class="fa-solid fa-headset node-icon text-indigo-600"></i>
-                        <span class="node-label text-indigo-900">Registro Funcionario</span>
+                <nav class="hidden md:flex space-x-6 text-sm font-medium">
+                    <a href="#" class="hover:text-gray-200 transition-colors">Transparencia</a>
+                    <a href="#" class="hover:text-gray-200 transition-colors">Atención al ciudadano</a>
+                    <button onclick="prepararFormulario('kobo')" class="bg-[#B53D75] text-white px-6 py-2 rounded-full font-bold hover:bg-[#8e2d5a] transition-all transform hover:scale-105 shadow-md flex items-center">
+                        Kobo <i class="fa-solid fa-list-check ml-2"></i>
                     </button>
-                    <button onclick="abrirModulo('tamizaje')" class="flow-node group border-yellow-300 bg-yellow-50">
-                        <i class="fa-solid fa-calculator node-icon text-yellow-600"></i>
-                        <span class="node-label text-yellow-900">Tamizaje de Riesgo</span>
-                    </button>
-                </div>
-                <div class="flex justify-center text-gray-300 text-3xl my-4">
-                    <i class="fa-solid fa-arrow-down-long animate-bounce-slow"></i>
-                </div>
-            </div>
-
-            <div id="diagram-kobo" class="diagram-segment flex flex-col items-center gap-6">
-                <h4 class="text-xs uppercase text-gray-400 font-bold tracking-wider text-center">Generación de Caso</h4>
-                <button onclick="abrirModulo('kobo')" class="flow-node group border-pink-200 bg-pink-50">
-                    <i class="fa-solid fa-list-check node-icon text-pink-700"></i>
-                    <span class="node-label text-pink-950">Formulario Kobo (CASO)</span>
+                </nav>
+                <button onclick="toggleMenuMovil()" class="md:hidden text-white hover:text-gray-200 focus:outline-none p-1">
+                    <i class="fa-solid fa-bars text-xl"></i>
                 </button>
-                <div class="flex justify-center text-gray-300 text-3xl my-4">
-                    <i class="fa-solid fa-arrow-down-long animate-bounce-slow"></i>
-                </div>
             </div>
-
-            <div id="diagram-seguimiento" class="diagram-segment space-y-6 bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
-                <h4 class="text-xs uppercase text-teal-600 font-bold tracking-wider text-center">
-                    <i class="fa-solid fa-timeline mr-2"></i> Trazabilidad y Repositorios de Asignación (Semaforización)
-                </h4>
-                
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    
-                    <button onclick="abrirModulo('repo-psicosocial')" class="flow-repo group">
-                        <div class="flex items-center gap-3">
-                            <i class="fa-solid fa-brain repo-icon text-teal-600"></i>
-                            <div>
-                                <span class="repo-label">Psicosocial</span>
-                                <div class="repo-badge bg-red-100 text-red-700">5 Críticos</div>
-                            </div>
-                        </div>
-                    </button>
-
-                    <button onclick="abrirModulo('repo-estabilizacion')" class="flow-repo group">
-                        <div class="flex items-center gap-3">
-                            <i class="fa-solid fa-scale-balanced repo-icon text-teal-600"></i>
-                            <div>
-                                <span class="repo-label">Estabilización</span>
-                                <div class="repo-badge bg-yellow-100 text-yellow-800">12 Moderados</div>
-                            </div>
-                        </div>
-                    </button>
-
-                    <button onclick="abrirModulo('repo-emergencia')" class="flow-repo group">
-                        <div class="flex items-center gap-3">
-                            <i class="fa-solid fa-house-medical-flag repo-icon text-teal-600"></i>
-                            <div>
-                                <span class="repo-label">Medidas Emergencia</span>
-                                <div class="repo-badge bg-red-100 text-red-700">2 Extremos</div>
-                            </div>
-                        </div>
-                    </button>
-
-                    <button onclick="abrirModulo('repo-masculinidades')" class="flow-repo group">
-                        <div class="flex items-center gap-3">
-                            <i class="fa-solid fa-menorah repo-icon text-teal-600"></i>
-                            <div>
-                                <span class="repo-label">Masculinidades</span>
-                                <div class="repo-badge bg-green-100 text-green-700">8 Bajos</div>
-                            </div>
-                        </div>
-                    </button>
-                </div>
-            </div>
-
-        </section>
-    </main>
-
-    <div id="salvia-modal" class="hidden fixed inset-0 bg-gray-900/70 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden">
-            <header class="px-6 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
-                <h3 id="modal-title" class="text-xl font-bold text-slate-800">Nombre del Formulario</h3>
-                <button onclick="cerrarModulo()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </header>
             
-            <div id="eav-form-container" class="flex-1 p-8 overflow-y-auto bg-gray-50/50 space-y-8 scrollbar-thin scrollbar-thumb-slate-200">
+            <div id="menu-movil" class="hidden md:hidden bg-blue-800 border-t border-blue-700">
+                <nav class="flex flex-col px-4 py-3 space-y-3 text-sm font-medium">
+                    <a href="#" class="block hover:underline py-1">Transparencia</a>
+                    <a href="#" class="block hover:underline py-1">Atención al ciudadano</a>
+                    <button onclick="prepararFormulario('kobo')" class="bg-[#B53D75] text-white px-6 py-2 rounded-full font-bold hover:bg-[#8e2d5a] transition-all transform hover:scale-105 shadow-md flex items-center">
+                        Kobo <i class="fa-solid fa-list-check ml-2"></i>
+                    </button>
+                </nav>
+            </div>
+        </div>
+        
+        <header class="bg-[#B53D75] shadow-md border-b-4 border-[#CB386D] sticky top-0 z-40 shrink-0">
+            <div class="container mx-auto px-4 py-4 flex justify-between items-center relative">
+                <div class="flex items-center space-x-3">
+                    <div class="text-white font-bold text-xl flex items-center border-r-2 border-white/30 pr-4">
+                        <img src="assets/img/minigualdad_blanco.png" alt="MinIgualdad" class="h-10 md:h-12 object-contain mr-2"> 
+                        <div class="leading-tight hidden sm:block">
+                            <span class="block text-sm font-normal text-white/80">Ministerio de</span> Igualdad y Equidad
+                        </div>
+                    </div>
+                    <div class="text-white font-extrabold text-xl md:text-2xl tracking-widest pl-2 flex items-center">
+                        <img src="assets/img/flower.png" alt="Salvia" class="h-8 md:h-10 object-contain mr-2"> SALVIA
+                    </div>
                 </div>
 
-            <footer id="modal-footer" class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 shrink-0 bg-white">
-                <button onclick="cerrarModulo()" class="px-5 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100">Cancelar</button>
-                <button onclick="enviarFormulario(event)" id="modal-submit-btn" class="px-5 py-2 rounded-lg text-sm font-bold text-white bg-[#380E44] hover:bg-purple-900">Guardar</button>
-            </footer>
-        </div>
-    </div>
+                <div class="flex items-center space-x-3">
+                    <button type="button" onclick="toggleAsistenteVoz()" id="btn-audio" class="bg-white/20 hover:bg-white/30 text-white p-2.5 rounded-full transition focus:ring-4 focus:ring-white outline-none" title="Activar Asistente de Voz para Invidentes" tabindex="1">
+                        <i class="fa-solid fa-ear-listen text-lg"></i>
+                    </button>
+                    <button id="btn-nav-login" onclick="navPublic('login-view')" class="text-sm bg-white hover:bg-gray-100 text-[#B53D75] font-bold py-2 px-4 rounded transition shadow-sm focus:ring-4 focus:ring-white">
+                        <span class="hidden sm:inline">Ingreso </span>Funcionarios
+                    </button>
+                </div>
+            </div>
+        </header>
 
+        <main class="flex-grow flex flex-col relative">
+            
+            <section id="home-view" class="flex-grow flex flex-col items-center justify-start bg-gray-50 relative overflow-y-auto py-12 px-4">
+                
+                <div class="text-center mb-10 animate-fade-in-up">
+                    <h1 class="text-3xl font-black text-[#380E44] mb-2 uppercase tracking-widest flex items-center justify-center">
+                        <i class="fa-solid fa-leaf text-[#26a69a] mr-3"></i> Portal Salvia
+                    </h1>
+                    <h2 class="text-lg text-gray-500 font-medium">Seleccione su ruta de acceso para iniciar el proceso</h2>
+                </div>
+
+                <div class="flex flex-col items-center relative w-full max-w-3xl animate-fade-in" style="animation-delay: 0.1s;">
+                    
+                    <div class="flex justify-around w-full relative z-10 px-8">
+                        
+                        <button onclick="prepararFormulario('victima')" class="flex flex-col items-center group w-32">
+                            <div class="w-20 h-20 bg-pink-100 rounded-full flex items-center justify-center text-pink-600 group-hover:bg-pink-600 group-hover:text-white transition-all duration-300 shadow-md transform group-hover:scale-110 border-2 border-pink-200">
+                                <i class="fa-solid fa-person-dress text-4xl"></i>
+                            </div>
+                            <span class="mt-4 font-bold text-gray-700 text-center text-sm uppercase tracking-wide group-hover:text-pink-600 transition-colors">Víctima</span>
+                        </button>
+
+                        <button onclick="prepararFormulario('tercero')" class="flex flex-col items-center group w-32">
+                            <div class="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-all duration-300 shadow-md transform group-hover:scale-110 border-2 border-purple-200">
+                                <i class="fa-solid fa-people-roof text-4xl"></i>
+                            </div>
+                            <span class="mt-4 font-bold text-gray-700 text-center text-sm uppercase tracking-wide group-hover:text-purple-600 transition-colors">Tercero / Familiar</span>
+                        </button>
+
+                    </div>
+
+                    <svg class="w-full h-16 -mt-2 -mb-2 opacity-40 z-0 pointer-events-none" preserveAspectRatio="none" viewBox="0 0 100 100">
+                        <path d="M 25 0 L 50 100 L 75 0" stroke="#6B7280" stroke-width="2" stroke-dasharray="4 4" fill="none" />
+                    </svg>
+
+                    <div class="relative z-10">
+                        <button onclick="prepararFormulario('funcionario')" class="flex flex-col items-center group w-32">
+                            <div class="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 shadow-lg transform group-hover:scale-110 border-4 border-white ring-2 ring-blue-100">
+                                <i class="fa-solid fa-headset text-4xl"></i>
+                            </div>
+                            <span class="mt-4 font-bold text-gray-700 text-center text-sm uppercase tracking-wide group-hover:text-blue-600 transition-colors">Funcionario<br>de Registro</span>
+                        </button>
+                    </div>
+
+                    <div class="h-16 border-l-2 border-dashed border-gray-400 my-2 opacity-40 z-0"></div>
+
+                    <div class="relative z-10 w-full bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-gray-100 hover:shadow-2xl transition-shadow duration-300">
+                        
+                        <button onclick="toggleKoboMenu()" class="flex flex-col items-center group w-full outline-none">
+                            <div class="w-20 h-20 bg-[#26a69a] rounded-2xl flex items-center justify-center text-white group-hover:bg-teal-600 transition-all duration-300 shadow-md transform group-hover:scale-105 rotate-3 group-hover:rotate-0">
+                                <i class="fa-solid fa-file-signature text-4xl"></i>
+                            </div>
+                            <span class="mt-4 font-bold text-gray-800 text-center text-lg uppercase tracking-wide">Seguimiento KOBO</span>
+                            <p class="text-xs text-gray-500 mt-1 flex items-center"><i class="fa-solid fa-hand-pointer mr-1"></i> Clic para desplegar las secciones</p>
+                        </button>
+
+                        <div id="kobo-sections-menu" class="hidden gap-4 mt-8 pt-6 border-t border-gray-100">
+                            <button onclick="abrirSeccionKobo('S_009')" class="flex flex-col items-center p-4 rounded-xl hover:bg-teal-50 transition border border-transparent hover:border-teal-100 group">
+                                <i class="fa-solid fa-clipboard-user text-2xl text-teal-500 mb-2 group-hover:scale-110 transition-transform"></i>
+                                <span class="text-xs font-bold text-gray-600 text-center">Atención SALVIA</span>
+                            </button>
+                            
+                            <button onclick="abrirSeccionKobo('S_010')" class="flex flex-col items-center p-4 rounded-xl hover:bg-amber-50 transition border border-transparent hover:border-amber-100 group">
+                                <i class="fa-solid fa-triangle-exclamation text-2xl text-amber-500 mb-2 group-hover:scale-110 transition-transform"></i>
+                                <span class="text-xs font-bold text-gray-600 text-center">Valoración Riesgo</span>
+                            </button>
+                            
+                            <button onclick="abrirSeccionKobo('S_011')" class="flex flex-col items-center p-4 rounded-xl hover:bg-indigo-50 transition border border-transparent hover:border-indigo-100 group">
+                                <i class="fa-solid fa-route text-2xl text-indigo-500 mb-2 group-hover:scale-110 transition-transform"></i>
+                                <span class="text-xs font-bold text-gray-600 text-center">Rutas Diferenciales</span>
+                            </button>
+                            
+                            <button onclick="abrirSeccionKobo('S_012')" class="flex flex-col items-center p-4 rounded-xl hover:bg-red-50 transition border border-transparent hover:border-red-100 group">
+                                <i class="fa-solid fa-ban text-2xl text-red-500 mb-2 group-hover:scale-110 transition-transform"></i>
+                                <span class="text-xs font-bold text-gray-600 text-center">Barreras</span>
+                            </button>
+                            
+                            <button onclick="abrirSeccionKobo('S_013')" class="flex flex-col items-center p-4 rounded-xl hover:bg-blue-50 transition border border-transparent hover:border-blue-100 group">
+                                <i class="fa-solid fa-magnifying-glass-chart text-2xl text-blue-500 mb-2 group-hover:scale-110 transition-transform"></i>
+                                <span class="text-xs font-bold text-gray-600 text-center">Seguimiento Caso</span>
+                            </button>
+                            
+                            <button onclick="abrirSeccionKobo('S_014')" class="flex flex-col items-center p-4 rounded-xl hover:bg-purple-50 transition border border-transparent hover:border-purple-100 group">
+                                <i class="fa-solid fa-handshake text-2xl text-purple-500 mb-2 group-hover:scale-110 transition-transform"></i>
+                                <span class="text-xs font-bold text-gray-600 text-center">Empalme</span>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+            <section id="reporte-view" class="hidden-view flex-grow container mx-auto px-4 py-8 max-w-4xl">
+                <button onclick="navPublic('home-view')" class="mb-6 text-[#380E44] font-bold flex items-center hover:underline">
+                    <i class="fa-solid fa-arrow-left mr-2"></i> Volver al inicio
+                </button>
+                
+                <div class="bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-100 pb-8">
+                    <div class="bg-[#380E44] text-white px-6 py-5 flex justify-between items-center mb-4">
+                        <div>
+                            <h1 id="form-dynamic-title" class="text-2xl font-bold">Registro de Contacto indirecto</h1>
+                            <p class="text-sm mt-1 opacity-90">Sistema Nacional de Registro, Atención, Seguimiento y Monitoreo</p>
+                        </div>
+                    </div>
+                    
+                    <div class="px-6 md:px-8">
+                        <p id="form-dynamic-instruction" class="text-sm text-gray-800 mb-6 bg-blue-50 p-4 rounded-lg border-l-4 border-[#3366CC]" tabindex="0">
+                            <strong>Orientación:</strong> Por favor complete la información. El campo de teléfono es obligatorio.
+                        </p>
+                        
+                        <form id="form-reporte" onsubmit="enviarReporte(event)">
+                            
+                            <div id="eav-public-container"></div>
+
+                            <div id="campos-credenciales" class="hidden mt-8 bg-purple-50 p-6 rounded-xl border border-purple-200">
+                                <h3 class="font-bold text-[#380E44] mb-4 border-b border-purple-200 pb-2">
+                                    <i class="fa-solid fa-key mr-2"></i> Crear Credenciales de Acceso
+                                </h3>
+                                <p class="text-xs text-purple-800 mb-4">Estos datos le permitirán ingresar a futuro para hacer seguimiento a su caso.</p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-bold text-gray-700 mb-1">Crear Usuario</label>
+                                        <input type="text" class="client-input-field" placeholder="Ejemplo: maria.perez26">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-gray-700 mb-1">Contraseña segura</label>
+                                        <input type="password" class="client-input-field" placeholder="••••••••">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row items-center sm:space-x-4 pt-6 mt-6 border-t border-gray-200">
+                                <span id="captcha-text" class="text-gray-600 font-mono text-lg italic select-none mb-2 sm:mb-0">Verificación: </span>
+                                <input type="text" id="reporte-captcha" required class="numpad-trigger w-24 client-input-field text-center cursor-pointer bg-gray-50 mb-2 sm:mb-0" placeholder="?" inputmode="numeric">
+                                <span class="text-xs text-gray-500">Haga clic en el cuadro</span>
+                            </div>
+
+                            <div class="pt-6 flex justify-center">
+                                <button type="submit" class="client-btn-success w-full sm:w-auto text-lg py-3 px-12">
+                                    Enviar reporte
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <section id="login-view" class="hidden-view flex-grow flex items-center justify-center p-4">
+                <div class="w-full max-w-4xl bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col md:flex-row slide-in">
+                    <div class="hidden md:block md:w-1/2 relative bg-[#f4f1f9]">
+                        <img src="assets/img/salvia_login_ops.png" alt="Funcionarios SALVIA" class="absolute inset-0 w-full h-full object-cover mix-blend-multiply">
+                    </div>
+                    <div class="w-full md:w-1/2 p-8 lg:p-12 flex flex-col justify-center bg-white">
+                        <button onclick="navPublic('home-view')" class="mb-8 text-gray-400 text-sm font-bold flex items-center hover:text-[#380E44] transition-colors w-fit">
+                            <i class="fa-solid fa-arrow-left mr-2"></i> Volver
+                        </button>
+                        <div class="mb-8">
+                            <h2 class="text-3xl font-black text-[#380E44] flex items-center tracking-tight">
+                                Ingresar a SALVIA
+                            </h2>
+                            <p class="text-sm text-gray-500 mt-2 font-medium">Acceso seguro para funcionarios y funcionarias.</p>
+                        </div>
+                        <form onsubmit="ingresarDashboard(event)" class="space-y-5">
+                            <div>
+                                <label class="client-input-label">👤 Número de documento</label>
+                                <input type="text" id="login-doc" required class="client-input-field cursor-pointer numpad-trigger bg-gray-50 font-bold" placeholder="Ejemplo: 123456789" inputmode="numeric">
+                            </div>
+                            <div>
+                                <label class="client-input-label">🔒 Contraseña</label>
+                                <input type="password" id="login-pass" required class="client-input-field bg-gray-50 font-bold" placeholder="••••••••">
+                            </div>
+                            <div class="flex items-center space-x-4 pt-4 mt-2 border-t border-gray-100">
+                                <span id="login-captcha-text" class="text-gray-600 font-mono text-sm font-bold select-none">Verificación: </span>
+                                <input type="text" id="login-captcha" required class="numpad-trigger w-24 client-input-field text-center cursor-pointer bg-purple-50 border-purple-200 font-bold text-purple-900" placeholder="?" inputmode="numeric">
+                            </div>
+                            <button type="submit" class="w-full client-btn-success py-3.5 text-base shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all flex items-center justify-center mt-4">
+                                Ingresar al Panel <i class="fa-solid fa-arrow-right-to-bracket ml-2"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+    
     <script src="salvia_esquema.js"></script>
     <script src="salvia_app.js"></script>
 </body>
