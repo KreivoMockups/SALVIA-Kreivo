@@ -1363,11 +1363,15 @@ function calcularTamizaje() {
 
 // 5. FUNCIONES AUXILIARES PARA EL FLUJO
 function renderizarEAVPersonalizado(containerId, raizPrincipal) {
-    // Usamos el DAG, solo que inyectamos los elementos en el contenedor del Modal
-    renderizarFormularioDinamico(containerId); // Tu función existente que dibuja inputs
-    // En un futuro próximo podemos ajustar el 'renderizarFormularioDinamico' 
-    // para que solo pinte los campos específicos de "raizPrincipal".
+    // 1. La "Impresora": Dibuja todo el catálogo de preguntas en el HTML
+    renderizarFormularioDinamico(containerId); 
+    
+    // 2. LA MAGIA (La "Tijera" del DAG): 
+    // Como ya definimos 'rolActual' antes de llamar a esta función, 
+    // el DAG sabe exactamente qué secciones (S_004, S_005) debe dejar visibles y cuáles ocultar.
+    evaluarDAG(containerId);
 }
+
 
 function precargarDatosCasoKobo() {
     console.log("Simulando extracción de datos de la base EAV previa...");
