@@ -1414,15 +1414,31 @@ function cargarRepositorio(container, area) {
 
 
 // ==========================================
-// INICIALIZADOR GENERAL
+// ==========================================
+// INICIALIZADOR GENERAL (V4.0 - DIAGRAMA)
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
-    if(typeof navPublic === 'function') navPublic('home-view');
+    // 1. Ya no forzamos la navegación a "home-view" porque ahora todo es un solo lienzo.
+    
+    // 2. Cargamos configuraciones secundarias si existen
     if(typeof cargarCacheAlInicio === 'function') cargarCacheAlInicio(); 
     if(typeof generarCaptchas === 'function') generarCaptchas();
     
-    // ¡AQUÍ ESTÁ LA MAGIA! Ejecutamos el motor en AMBOS lados al mismo tiempo
-    renderizarFormularioDinamico('eav-public-container'); // Para la vista pública
-    renderizarFormularioDinamico('dynamic-form-preview'); // Para el Constructor EAV
+    // 3. Ya no dibujamos el formulario al cargar la página. 
+    // Ahora esperamos pacientemente a que el usuario haga clic en un nodo del diagrama
+    // para dibujar el formulario dinámicamente dentro del Modal.
+    console.log("Simulador de Flujo SALVIA V4.0 inicializado. Esperando interacción.");
 });
+
+// Parche de compatibilidad para el botón "Guardar" del Modal
+function enviarFormulario(event) {
+    // Reutilizamos tu magistral función de enviarReporte que guarda el JSON y en la Bandeja
+    if(typeof enviarReporte === 'function') {
+        enviarReporte(event);
+        cerrarModulo(); // Cerramos la ventana flotante al terminar
+    } else {
+        alert("Función de guardado en construcción.");
+    }
+}
+
 
