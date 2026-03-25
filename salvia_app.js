@@ -1191,6 +1191,101 @@ function retomarCaso(idCaso) {
     }
 }
 
+
+// ==========================================
+// 14. EXPORTACIÓN E IMPORTACIÓN JSON (MOCKUP INTEROPERABILIDAD)
+// ==========================================
+
+function exportarFormularioJSON() {
+    const formData = {};
+    // Seleccionamos todos los inputs dentro de nuestro formulario dinámico
+    const container = document.getElementById('eav-public-container');
+    const inputs = container.querySelectorAll('input, select, textarea');
+
+    inputs.forEach(input => {
+        // Capturamos el código de la pregunta (ID)
+        const key = input.id;
+        if (!key) return;
+
+        if (input.type === 'radio' || input.type === 'checkbox') {
+            if (input.checked) {
+                // Si es radio/checkbox, el name suele agruparlos, pero guardamos por ID o Name
+                formData[input.name || key] = input.value;
+            }
+        } else {
+            if (input.value) formData[key] = input.value;
+        }
+    });
+
+    // Añadimos metadata para darle contexto al archivo
+    const dataToSave = {
+        metadata: {
+            fecha_exportacion: new Date().toISOString(),
+            origen: rolActual // 'victima', 'funcionario', etc.
+        },
+        respuestas: formData
+    };
+
+    // Creamos el archivo y forzamos la descarga
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataToSave, null, 2));
+    const downloadNode = document.createElement('a');
+    downloadNode.setAttribute("href", dataStr);
+    downloadNode.setAttribute("download", `SALVIA_Datos_${rolActual}_${new Date().getTime()}.json`);
+    document.body.appendChild(downloadNode);
+    downloadNode.click();
+    downloadNode.remove();
+}
+
+function cargarFormularioJSON(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const contenido = JSON.parse(e.target.result);
+            // Compatibilidad por si suben un JSON viejo o de otra estructura
+            const respuestas = contenido.respuestas || contenido.datos || contenido; 
+
+            // Recorremos las llaves del JSON para inyectarlas en el DOM
+            Object.keys(respuestas).forEach(key => {
+                const valor = respuestas[key];
+                const input = document.getElementById(key);
+                
+                if (input) {
+                    // Si el input existe por ID directo (Textos, selects, dates)
+                    if (input.type !== 'radio' && input.type !== 'checkbox') {
+                        input.value = valor;
+                        // Disparamos el evento 'change' para que las reglas en cascada (DAG) abran los campos dependientes
+                        input.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                } else {
+                    // Si no existe por ID, probablemente es un grupo de Radios (se buscan por 'name')
+                    const radios = document.querySelectorAll(`input[name="${key}"]`);
+                    radios.forEach(radio => {
+                        if(radio.value === valor) {
+                            radio.checked = true;
+                            // Disparamos evento para revelar secciones ocultas si la regla aplica
+                            radio.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                    });
+                }
+            });
+
+            // Reseteamos el input file por si quieren cargar el mismo archivo dos veces
+            event.target.value = '';
+            
+            // Un pequeño feedback visual
+            alert("✅ Información cargada exitosamente. Los campos han sido pre-diligenciados.");
+
+        } catch (error) {
+            console.error("Error al leer el JSON:", error);
+            alert("❌ El archivo no tiene un formato válido para SALVIA.");
+        }
+    };
+    reader.readAsText(file);
+}
+
 // ==========================================
 // 13. LOGICA DEL FLUJO DE PROCESOS Y KOBO
 // ==========================================
